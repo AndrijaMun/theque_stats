@@ -30,7 +30,7 @@ CREATE TABLE OrderInfo (
     OrderID INTEGER NOT NULL,
     ItemID INTEGER NOT NULL,
     ItemAmount INTEGER NOT NULL,
-    PriceTotal DECIMAL(4, 2) NOT NULL,
+    PriceTotal DECIMAL(4, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID)),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
 );
