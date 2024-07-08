@@ -3,7 +3,8 @@ CREATE TABLE Orders (
     OrderTime DATETIME NOT NULL,
     CashierID INTEGER,
     OrderTypeID INTEGER,
-    PaymentTypeID INTEGER
+    PaymentTypeID INTEGER,
+    FOREIGN KEY (CashierID) REFERENCES Cashiers(CashierID)
 );
 
 CREATE TABLE Cashiers (
