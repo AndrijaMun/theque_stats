@@ -48,3 +48,5 @@ CREATE TABLE ItemTypes (
     ItemTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
     ItemTypeName VARCHAR(50) NOT NULL
 );
+
+INSERT INTO OrderTypes (OrderType) VALUES ('In person', 'Call in pickup', 'Wolt delivery', 'Wolt pickup');
