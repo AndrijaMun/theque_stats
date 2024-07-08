@@ -30,5 +30,6 @@ CREATE TABLE OrderInfo (
     OrderID INTEGER NOT NULL,
     ItemID INTEGER NOT NULL,
     ItemAmount INTEGER NOT NULL,
-    PriceTotal INTEGER NOT NULL
+    PriceTotal INTEGER NOT NULL,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
