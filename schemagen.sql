@@ -12,3 +12,8 @@ CREATE TABLE Cashiers (
     CashierName VARCHAR(30),
     CashierSurname VARCHAR(30)
 );
+
+CREATE TABLE OrderTypes (
+    OrderTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderType VARCHAR(50)
+);
