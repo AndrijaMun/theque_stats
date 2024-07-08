@@ -24,3 +24,11 @@ CREATE TABLE PaymentTypes (
     PaymentTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
     PaymentType VARCHAR(50)
 );
+
+CREATE TABLE OrderInfo (
+    OrderInfoID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderID INTEGER,
+    ItemID INTEGER,
+    ItemAmount INTEGER,
+    PriceTotal INTEGER
+);
