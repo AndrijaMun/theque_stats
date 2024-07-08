@@ -41,3 +41,8 @@ CREATE TABLE Items (
     ItemTypeID INTEGER,
     ItemPrice DECIMAL(4, 2) NOT NULL
 );
+
+CREATE TABLE ItemTypes (
+    ItemTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ItemTypeName VARCHAR(50) NOT NULL
+);
