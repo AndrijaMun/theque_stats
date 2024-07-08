@@ -1,7 +1,12 @@
 CREATE TABLE Orders (
     OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderTime DATETIME NOT NULL,
-    OrderAmount DECIMAL(5,2) GENERATED ALWAYS AS (SUM(SELECT PriceTotal FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)),
+    OrderAmount DECIMAL(5,2) GENERATED ALWAYS AS (
+        CASE 
+            WHEN PaymentTypeID = 3 THEN 0
+            ELSE SUM(SELECT PriceTotal FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)
+        END
+        ),
     CashierID INTEGER NOT NULL,
     OrderTypeID INTEGER NOT NULL,
     PaymentTypeID INTEGER NOT NULL,
@@ -17,12 +22,12 @@ CREATE TABLE Cashiers (
 );
 
 CREATE TABLE OrderTypes (
-    OrderTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderTypeID INTEGER PRIMARY KEY,
     OrderType VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE PaymentTypes (
-    PaymentTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    PaymentTypeID INTEGER PRIMARY KEY,
     PaymentType VARCHAR(50) NOT NULL
 );
 
@@ -49,4 +54,5 @@ CREATE TABLE ItemTypes (
     ItemTypeName VARCHAR(50) NOT NULL
 );
 
-INSERT INTO OrderTypes (OrderType) VALUES ('In person', 'Call in pickup', 'Wolt delivery', 'Wolt pickup');
+INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
+INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
