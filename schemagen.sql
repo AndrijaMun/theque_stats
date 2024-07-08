@@ -5,6 +5,7 @@ CREATE TABLE Orders (
     OrderTypeID INTEGER,
     PaymentTypeID INTEGER,
     FOREIGN KEY (CashierID) REFERENCES Cashiers(CashierID)
+    FOREIGN KEY (OrderTypeID) REFERENCES OrderTypes(OrderTypeID)
 );
 
 CREATE TABLE Cashiers (
