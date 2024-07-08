@@ -33,3 +33,10 @@ CREATE TABLE OrderInfo (
     PriceTotal INTEGER NOT NULL,
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
+
+CREATE TABLE Items (
+    ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ItemName VARCHAR(50) NOT NULL,
+    ItemTypeID INTEGER,
+    ItemPrice DECIMAL(4, 2) NOT NULL
+);
