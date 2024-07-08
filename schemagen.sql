@@ -18,3 +18,8 @@ CREATE TABLE OrderTypes (
     OrderTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderType VARCHAR(50)
 );
+
+CREATE TABLE PaymentTypes (
+    PaymentTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    PaymentType VARCHAR(50)
+);
