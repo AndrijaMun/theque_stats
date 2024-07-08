@@ -1,0 +1,7 @@
+CREATE TABLE Orders (
+    OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderTime DATETIME NOT NULL,
+    CashierID INTEGER,
+    OrderTypeID INTEGER,
+    PaymentTypeID INTEGER
+);
