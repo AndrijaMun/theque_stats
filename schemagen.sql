@@ -5,3 +5,9 @@ CREATE TABLE Orders (
     OrderTypeID INTEGER,
     PaymentTypeID INTEGER
 );
+
+CREATE TABLE Cashiers (
+    CashierID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CashierName VARCHAR(30),
+    CashierSurname VARCHAR(30)
+);
