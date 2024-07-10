@@ -16,7 +16,7 @@ random_time_obj = 0
 daily_orders = 0
 counter = 0
 
-conn = sqlite3.connect('schemagen.db')
+conn = sqlite3.connect('theque.db')
 cursor = conn.cursor()
 
 while True:
@@ -40,10 +40,12 @@ while date <= end_date:
     counter = 1
     while counter <= daily_orders:
         random_time_obj = random_time()
+        prev_date = date
         date = date.replace(hour=random_time_obj.hour, minute=random_time_obj.minute, second=random_time_obj.second)
-        if cursor.execute("""SELECT MAX(OrderID) FROM Orders""") > 0 and date == cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = (SELECT MAX(OrderID) - 1 FROM Orders)"""):
+        if date == prev_date:
             date += timedelta(seconds=30)
-        cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", date)
+        cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
         counter += 1
     date += timedelta(days=1)
-cursor.execute("""SELECT OrderTime FROM Orders ORDER BY datetime_column""")
+cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
+conn.commit
