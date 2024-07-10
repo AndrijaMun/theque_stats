@@ -43,7 +43,7 @@ CREATE TABLE OrderInfo (
 
 CREATE TABLE Items (
     ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
-    ItemName VARCHAR(50) NOT NULL,
+    ItemName VARCHAR(100) NOT NULL,
     ItemTypeID INTEGER,
     ItemFlavourID INTEGER,
     ItemPrice DECIMAL(4, 2) NOT NULL,
@@ -63,8 +63,74 @@ CREATE TABLE ItemFlavours (
 
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
-INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Coffee / Matcha'), (6, 'Soft drink'), (7, 'Add-on');
-INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello');
+INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink'), (7, 'Add-on');
+INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello'), ('Plain'), ('Peach'), ('Apple'), ('Orange');
 
 INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
-()
+('Simple Tayiaki', 1, 1, 4),
+('Simple Tayiaki', 1, 2, 4),
+('Simple Tayiaki', 1, 3, 4.3),
+('Simple Tayiaki', 1, 4, 4.3),
+('Extra Tayiaki', 1, 5, 5),
+('Extra Tayiaki', 1, 6, 5),
+('Premium Tayiaki', 1, 7, 6),
+('Premium Tayiaki', 1, 8, 6),
+
+('Classic Mochi', 2, 1, 4),
+('Classic Mochi', 2, 2, 4),
+('Classic Mochi', 2, 3, 4.5),
+('Classic Mochi', 2, 4, 4.5),
+('Premium Mochi', 2, 1, 5),
+('Premium Mochi', 2, 2, 5),
+('Premium Mochi', 2, 3, 5.5),
+('Premium Mochi', 2, 4, 5.5),
+
+('Standard Ice Cream Cup', 3, 1, 2.8),
+('Standard Ice Cream Cup', 3, 2, 2.8),
+('Standard Ice Cream Cup', 3, 3, 3.3),
+('Standard Ice Cream Cup', 3, 4, 3.3),
+('Large Ice Cream Cup', 3, 1, 3.8),
+('Large Ice Cream Cup', 3, 2, 3.8),
+('Large Ice Cream Cup', 3, 3, 4.3),
+('Large Ice Cream Cup', 3, 4, 4.3),
+
+('Cocoa Base Pancake', 4, 9, 3),
+('Cocoa Base Pancake', 4, 5, 4),
+('Cocoa Base Pancake', 4, 6, 4),
+('Cocoa Base Pancake', 4, 7, 5),
+('Cocoa Base Pancake', 4, 8, 5),
+
+('Espresso', 5, NULL, 1.3),
+('Double Espresso', 5, NULL, 2.1),
+('Small Macchiato', 5, NULL, 1.5),
+('Standard Macchiato', 5, NULL, 1.8),
+('Cappuccino', 5, NULL, 1.8),
+('Cafe Latte', 5, NULL, 2),
+('Standard Matcha Latte', 5, NULL, 3),
+('Large Matcha Latte', 5, NULL, 3.5),
+('Affogato', 5, NULL, 3),
+
+('Still Water', 6, NULL, 2.5),
+('Sparkling Water', 6, NULL, 2.5),
+('Coca-Cola', 6, NULL, 2.5),
+('Coca-Cola Zero', 6, NULL, 2.5),
+('Jana Ice Tea', 6, 10, 2.5),
+('Cappy Juice', 6, 11, 2.5),
+('Cappy Juice', 6, 12, 2.5);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
