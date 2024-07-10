@@ -57,11 +57,14 @@ CREATE TABLE ItemTypes (
 );
 
 CREATE TABLE ItemFlavours (
-    ItemFlavourID INTEGER PRIMARY KEY,
+    ItemFlavourID INTEGER PRIMARY KEY AUTOINCREMENT,
     ItemFlavour VARCHAR(50) NOT NULL
 );
 
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
 INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Coffee / Matcha'), (6, 'Soft drink'), (7, 'Add-on');
+INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello');
 
+INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
+()
