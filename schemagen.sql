@@ -1,3 +1,4 @@
+-- main table for all orders
 CREATE TABLE Orders (
     OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderTime DATETIME NOT NULL,
@@ -8,6 +9,7 @@ CREATE TABLE Orders (
         END
         ),
     StampCouponAmount INTEGER,
+-- makes most expensive item and most expensive add-on free if a completed stamp card is presented when ordering
     CASE 
         WHEN StampCouponAmount IS NOT NULL THEN OrderAmount = OrderAmount - (SELECT MAX(ItemPrice) FROM Items WHERE OrderInfo.OrderID = OrderID AND Items.ItemID = OrderInfo.ItemID) - (SELECT MAX(AddOnPrice) FROM AddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID AND ItemAddOns.AddOnID = AddOns.AddOnID)
     END
@@ -19,32 +21,39 @@ CREATE TABLE Orders (
     FOREIGN KEY (PaymentTypeID) REFERENCES PaymentTypes(PaymentTypeID)
 );
 
+
+-- table for all cashiers that serve orders
 CREATE TABLE Cashiers (
     CashierID INTEGER PRIMARY KEY AUTOINCREMENT,
     CashierName VARCHAR(30) NOT NULL,
     CashierSurname VARCHAR(30) NOT NULL
 );
 
+-- table for ordering methods
 CREATE TABLE OrderTypes (
     OrderTypeID INTEGER PRIMARY KEY,
     OrderType VARCHAR(50) NOT NULL
 );
 
+-- table for payment methods
 CREATE TABLE PaymentTypes (
     PaymentTypeID INTEGER PRIMARY KEY,
     PaymentType VARCHAR(50) NOT NULL
 );
 
+-- table for each item in an order 
 CREATE TABLE OrderInfo (
     OrderInfoID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderID INTEGER NOT NULL,
     ItemID INTEGER NOT NULL,
+    -- same items are grouped together
     ItemAmount INTEGER NOT NULL,
     PriceTotal DECIMAL(5, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID) + (SELECT SUM(PriceTotal) FROM ItemAddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID)),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
 );
 
+-- table for items on the menu
 CREATE TABLE Items (
     ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
     ItemName VARCHAR(100) NOT NULL,
@@ -55,16 +64,19 @@ CREATE TABLE Items (
     FOREIGN KEY ItemFlavourID REFERENCES ItemFlavours(ItemFlavourID)
 );
 
+-- table for item categories
 CREATE TABLE ItemTypes (
     ItemTypeID INTEGER PRIMARY KEY,
     ItemTypeName VARCHAR(50) NOT NULL
 );
 
+-- table for flavours that span multiple items
 CREATE TABLE ItemFlavours (
     ItemFlavourID INTEGER PRIMARY KEY AUTOINCREMENT,
     ItemFlavour VARCHAR(50) NOT NULL
 );
 
+-- table for extra add-ons on the menu
 CREATE TABLE AddOns (
     AddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
     AddOn VARCHAR(50) NOT NULL,
@@ -73,11 +85,13 @@ CREATE TABLE AddOns (
     FOREIGN KEY AddOnTypeID REFERENCES AddOnTypes (AddOnTypeID)
 );
 
+-- table for add-on categories
 CREATE TABLE AddOnTypes (
     AddOnTypeID INTEGER PRIMARY KEY,
     AddOnType VARCHAR(50) NOT NULL
 )
 
+-- table for add-ons paired with an item in an order
 CREATE TABLE ItemAddOns (
     ItemAddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderInfoID INTEGER NOT NULL,
@@ -88,6 +102,7 @@ CREATE TABLE ItemAddOns (
     FOREIGN KEY (AddOnID) REFERENCES AddOns(AddOnID)
 );
 
+-- base data entry
 INSERT INTO Cashiers VALUES (1, "John", "Doe"), (2, "Mary", "Sue");
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
