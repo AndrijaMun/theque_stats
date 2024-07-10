@@ -2,17 +2,8 @@
 CREATE TABLE Orders (
     OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderTime DATETIME NOT NULL,
-    OrderAmount DECIMAL(5,2) GENERATED ALWAYS AS (
-        CASE 
-            WHEN PaymentTypeID = 3 THEN 0
-            ELSE (SELECT SUM(PriceTotal) FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)
-        END
-        ),
+    OrderAmount DECIMAL(5,2),
     StampCouponAmount INTEGER,
--- makes most expensive item and most expensive add-on free if a completed stamp card is presented when ordering
-    CASE 
-        WHEN StampCouponAmount IS NOT NULL THEN OrderAmount = OrderAmount - (SELECT MAX(ItemPrice) FROM Items WHERE OrderInfo.OrderID = OrderID AND Items.ItemID = OrderInfo.ItemID) - (SELECT MAX(AddOnPrice) FROM AddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID AND ItemAddOns.AddOnID = AddOns.AddOnID)
-    END
     CashierID INTEGER NOT NULL,
     OrderTypeID INTEGER NOT NULL,
     PaymentTypeID INTEGER NOT NULL,
@@ -48,7 +39,7 @@ CREATE TABLE OrderInfo (
     ItemID INTEGER NOT NULL,
     -- same items are grouped together
     ItemAmount INTEGER NOT NULL,
-    PriceTotal DECIMAL(5, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID) + (SELECT SUM(PriceTotal) FROM ItemAddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID)),
+    PriceTotal DECIMAL(5, 2),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
 );
@@ -82,7 +73,7 @@ CREATE TABLE AddOns (
     AddOn VARCHAR(50) NOT NULL,
     AddOnTypeID INTEGER,
     AddOnPrice DECIMAL (4,2) NOT NULL,
-    FOREIGN KEY AddOnTypeID REFERENCES AddOnTypes (AddOnTypeID)
+    FOREIGN KEY AddOnTypeID REFERENCES AddOnTypes(AddOnTypeID)
 );
 
 -- table for add-on categories
@@ -97,7 +88,7 @@ CREATE TABLE ItemAddOns (
     OrderInfoID INTEGER NOT NULL,
     AddOnID INTEGER NOT NULL,
     AddOnAmount INTEGER NOT NULL,
-    PriceTotal DECIMAL (5,2) GENERATED ALWAYS AS (AddOnAmount * (SELECT AddOnPrice FROM AddOns WHERE AddOns.AddOnID = AddOnID)),
+    PriceTotal DECIMAL (5,2),
     FOREIGN KEY (OrderInfoID) REFERENCES OrderInfo(OrderInfoID),
     FOREIGN KEY (AddOnID) REFERENCES AddOns(AddOnID)
 );
