@@ -1,12 +1,12 @@
 -- main table for all orders
 CREATE TABLE Orders (
     OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
-    OrderTime DATETIME NOT NULL,
+    OrderTime DATETIME,
     OrderAmount DECIMAL(5,2),
     StampCouponAmount INTEGER,
-    CashierID INTEGER NOT NULL,
-    OrderTypeID INTEGER NOT NULL,
-    PaymentTypeID INTEGER NOT NULL,
+    CashierID INTEGER,
+    OrderTypeID INTEGER,
+    PaymentTypeID INTEGER,
     FOREIGN KEY (CashierID) REFERENCES Cashiers(CashierID),
     FOREIGN KEY (OrderTypeID) REFERENCES OrderTypes(OrderTypeID),
     FOREIGN KEY (PaymentTypeID) REFERENCES PaymentTypes(PaymentTypeID)
