@@ -12,11 +12,14 @@ def random_time():
     second = random.randint (0, 59)
     return datetime.now().replace(hour=hour, minute=minute, second=second)
 
-random_time_obj = 0
-daily_orders = 0
-counter = 0
+def adapt_datetime(dt):
+    return dt.isoformat()
+def convert_datetime(s):
+    return datetime.fromisoformat(s)
+sqlite3.register_adapter(datetime, adapt_datetime)
+sqlite3.register_converter("datetime", convert_datetime)
 
-conn = sqlite3.connect('theque.db')
+conn = sqlite3.connect('theque.db', detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
 
 while True:
@@ -48,4 +51,4 @@ while date <= end_date:
         counter += 1
     date += timedelta(days=1)
 cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
-conn.commit
+conn.commit()
