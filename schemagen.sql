@@ -7,6 +7,10 @@ CREATE TABLE Orders (
             ELSE (SELECT SUM(PriceTotal) FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)
         END
         ),
+    StampCouponAmount INTEGER,
+    CASE 
+        WHEN StampCouponAmount IS NOT NULL THEN OrderAmount = OrderAmount - (SELECT MAX(ItemPrice) FROM Items WHERE OrderInfo.OrderID = OrderID AND Items.ItemID = OrderInfo.ItemID) - (SELECT MAX(AddOnPrice) FROM AddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID AND ItemAddOns.AddOnID = AddOns.AddOnID)
+    END
     CashierID INTEGER NOT NULL,
     OrderTypeID INTEGER NOT NULL,
     PaymentTypeID INTEGER NOT NULL,
@@ -39,7 +43,6 @@ CREATE TABLE OrderInfo (
     PriceTotal DECIMAL(5, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID) + (SELECT SUM(PriceTotal) FROM ItemAddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID)),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
-    FOREIGN KEY (ItemAddOnID) REFERENCES ItemAddOns(ItemAddOnID)
 );
 
 CREATE TABLE Items (
