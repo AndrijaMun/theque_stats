@@ -10,7 +10,7 @@ def random_time():
     else:
         minute = random.randint(0, 59)
     second = random.randint (0, 59)
-    return datetime.now().replace(hour=hour, minute=minute, second=second)
+    return hour, minute, second
 
 def adapt_datetime(dt):
     return dt.isoformat()
@@ -41,9 +41,9 @@ date = start_date
 while date <= end_date:
     daily_orders = random.randint(5, 80)
     for _ in range(daily_orders):
-        random_time_obj = random_time()
+        hour, minute, second = random_time()
         prev_date = date
-        date = date.replace(hour=random_time_obj.hour, minute=random_time_obj.minute, second=random_time_obj.second)
+        date = datetime.combine(date, datetime.min.time()).replace(hour=hour, minute=minute, second=second)
         if date == prev_date:
             date += timedelta(seconds=30)
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
