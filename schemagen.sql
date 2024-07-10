@@ -51,8 +51,8 @@ CREATE TABLE Items (
     ItemTypeID INTEGER,
     ItemFlavourID INTEGER,
     ItemPrice DECIMAL(4, 2) NOT NULL,
-    FOREIGN KEY ItemTypeID REFERENCES ItemTypes(ItemTypeID),
-    FOREIGN KEY ItemFlavourID REFERENCES ItemFlavours(ItemFlavourID)
+    FOREIGN KEY (ItemTypeID) REFERENCES ItemTypes(ItemTypeID),
+    FOREIGN KEY (ItemFlavourID) REFERENCES ItemFlavours(ItemFlavourID)
 );
 
 -- table for item categories
@@ -73,7 +73,7 @@ CREATE TABLE AddOns (
     AddOn VARCHAR(50) NOT NULL,
     AddOnTypeID INTEGER,
     AddOnPrice DECIMAL (4,2) NOT NULL,
-    FOREIGN KEY AddOnTypeID REFERENCES AddOnTypes(AddOnTypeID)
+    FOREIGN KEY (AddOnTypeID) REFERENCES AddOnTypes(AddOnTypeID)
 );
 
 -- table for add-on categories
@@ -99,7 +99,7 @@ INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
 INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink');
 INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello'), ('Plain'), ('Peach'), ('Apple'), ('Orange');
-INSERT INTO AddonTypes VALUES (1, 'Liquid Topping'), (2, 'Sprinkle'), (3, 'Cookie'), (4, 'Fruit'), (5, 'Molded Chocolate'), (6, 'Milk Substitution');
+INSERT INTO AddOnTypes VALUES (1, 'Liquid Topping'), (2, 'Sprinkle'), (3, 'Cookie'), (4, 'Fruit'), (5, 'Molded Chocolate'), (6, 'Milk Substitution');
 
 INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
 ('Simple Tayiaki', 1, 1, 4),
