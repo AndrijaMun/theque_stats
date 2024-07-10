@@ -40,15 +40,13 @@ while True:
 date = start_date
 while date <= end_date:
     daily_orders = random.randint(5, 80)
-    counter = 1
-    while counter <= daily_orders:
+    for _ in range(daily_orders):
         random_time_obj = random_time()
         prev_date = date
         date = date.replace(hour=random_time_obj.hour, minute=random_time_obj.minute, second=random_time_obj.second)
         if date == prev_date:
             date += timedelta(seconds=30)
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
-        counter += 1
     date += timedelta(days=1)
 cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
 conn.commit()
