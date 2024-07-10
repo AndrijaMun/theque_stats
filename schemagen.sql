@@ -65,8 +65,15 @@ CREATE TABLE ItemFlavours (
 CREATE TABLE AddOns (
     AddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
     AddOn VARCHAR(50) NOT NULL,
-    AddOnPrice DECIMAL (4,2) NOT NULL
+    AddOnTypeID INTEGER,
+    AddOnPrice DECIMAL (4,2) NOT NULL,
+    FOREIGN KEY AddOnTypeID REFERENCES AddOnTypes (AddOnTypeID)
 );
+
+CREATE TABLE AddOnTypes (
+    AddOnTypeID INTEGER PRIMARY KEY,
+    AddOnType VARCHAR(50) NOT NULL
+)
 
 CREATE TABLE ItemAddOns (
     ItemAddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,6 +89,7 @@ INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
 INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink');
 INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello'), ('Plain'), ('Peach'), ('Apple'), ('Orange');
+INSERT INTO AddonTypes VALUES (1, 'Liquid Topping'), (2, 'Sprinkle'), (3, 'Cookie'), (4, 'Fruit'), (5, 'Molded Chocolate'), (6, 'Milk Substitution');
 
 INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
 ('Simple Tayiaki', 1, 1, 4),
@@ -134,6 +142,42 @@ INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
 ('Jana Ice Tea', 6, 10, 2.5),
 ('Cappy Juice', 6, 11, 2.5),
 ('Cappy Juice', 6, 12, 2.5);
+
+INSERT INTO AddOns (AddOn, AddOnTypeID, AddOnPrice) VALUES
+('Nutella', 1, 0.7),
+('White Linolada', 1, 0.7),
+('Hazelnut', 1, 0.7),
+('Chocolate', 1, 0.7),
+('Strawberry', 1, 0.7),
+('Forest Fruits', 1, 0.7),
+('Caramel', 1, 0.7),
+
+('Oreo', 2, 0.7),
+('Plasma', 2, 0.7),
+('Coconut', 2, 0.7),
+
+('Oreo', 3, 0.7),
+('Plasma', 3, 0.7),
+
+('Blueberry', 4, 0.7),
+('Raspberry', 4, 0.7),
+('Banana', 4, 0.7),
+
+('Hello Kitty', 5, 0.7),
+('Micky Mouse', 5, 0.7),
+('Unicorn Ears', 5, 0.7),
+
+('Oat Milk', 6, 0.7),
+('Soy Milk', 6, 0.7),
+('Lactose Free Milk', 6, 0.7),
+('Whipped Cream', NULL, 0.7),
+
+('Tayiaki Twist', NULL, 1);
+
+
+
+
+
 
 
 
