@@ -61,9 +61,15 @@ CREATE TABLE ItemFlavours (
     ItemFlavour VARCHAR(50) NOT NULL
 );
 
+CREATE TABLE AddOns (
+    AddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
+    AddOn VARCHAR(50) NOT NULL,
+    AddOnPrice DECIMAL (4,2) NOT NULL
+);
+
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
-INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink'), (7, 'Add-on');
+INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink');
 INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello'), ('Plain'), ('Peach'), ('Apple'), ('Orange');
 
 INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
