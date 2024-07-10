@@ -45,8 +45,10 @@ CREATE TABLE Items (
     ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
     ItemName VARCHAR(50) NOT NULL,
     ItemTypeID INTEGER,
+    ItemFlavourID INTEGER,
     ItemPrice DECIMAL(4, 2) NOT NULL,
-    FOREIGN KEY ItemTypeID REFERENCES ItemTypes(ItemTypeID)
+    FOREIGN KEY ItemTypeID REFERENCES ItemTypes(ItemTypeID),
+    FOREIGN KEY ItemFlavourID REFERENCES ItemFlavours(ItemFlavourID)
 );
 
 CREATE TABLE ItemTypes (
@@ -54,6 +56,12 @@ CREATE TABLE ItemTypes (
     ItemTypeName VARCHAR(50) NOT NULL
 );
 
+CREATE TABLE ItemFlavours (
+    ItemFlavourID INTEGER PRIMARY KEY,
+    ItemFlavour VARCHAR(50) NOT NULL
+);
+
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
 INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Coffee / Matcha'), (6, 'Soft drink'), (7, 'Add-on');
+
