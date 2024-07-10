@@ -4,7 +4,7 @@ CREATE TABLE Orders (
     OrderAmount DECIMAL(5,2) GENERATED ALWAYS AS (
         CASE 
             WHEN PaymentTypeID = 3 THEN 0
-            ELSE SUM(SELECT PriceTotal FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)
+            ELSE (SELECT SUM(PriceTotal) FROM OrderInfo WHERE OrderInfo.OrderID = OrderID)
         END
         ),
     CashierID INTEGER NOT NULL,
@@ -36,9 +36,10 @@ CREATE TABLE OrderInfo (
     OrderID INTEGER NOT NULL,
     ItemID INTEGER NOT NULL,
     ItemAmount INTEGER NOT NULL,
-    PriceTotal DECIMAL(5, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID)),
+    PriceTotal DECIMAL(5, 2) GENERATED ALWAYS AS (ItemAmount * (SELECT ItemPrice FROM Items WHERE Items.ItemID = ItemID) + (SELECT SUM(PriceTotal) FROM ItemAddOns WHERE ItemAddOns.OrderInfoID = OrderInfoID)),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
+    FOREIGN KEY (ItemAddOnID) REFERENCES ItemAddOns(ItemAddOnID)
 );
 
 CREATE TABLE Items (
@@ -65,6 +66,16 @@ CREATE TABLE AddOns (
     AddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
     AddOn VARCHAR(50) NOT NULL,
     AddOnPrice DECIMAL (4,2) NOT NULL
+);
+
+CREATE TABLE ItemAddOns (
+    ItemAddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderInfoID INTEGER NOT NULL,
+    AddOnID INTEGER NOT NULL,
+    AddOnAmount INTEGER NOT NULL,
+    PriceTotal DECIMAL (5,2) GENERATED ALWAYS AS (AddOnAmount * (SELECT AddOnPrice FROM AddOns WHERE AddOns.AddOnID = AddOnID)),
+    FOREIGN KEY (OrderInfoID) REFERENCES OrderInfo(OrderInfoID),
+    FOREIGN KEY (AddOnID) REFERENCES AddOns(AddOnID)
 );
 
 INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
@@ -114,7 +125,7 @@ INSERT INTO Items (ItemName, ItemTypeID, ItemFlavourID, ItemPrice) VALUES
 ('Cafe Latte', 5, NULL, 2),
 ('Standard Matcha Latte', 5, NULL, 3),
 ('Large Matcha Latte', 5, NULL, 3.5),
-('Affogato', 5, NULL, 3),
+('Affogato', 5, 1, 3),
 
 ('Still Water', 6, NULL, 2.5),
 ('Sparkling Water', 6, NULL, 2.5),
