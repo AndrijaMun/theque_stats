@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 def random_time():
     hour = random.randint(12, 22)
     if hour == 22:
-        minute = random.int(0, 30)
+        minute = random.randint(0, 30)
     else:
-        minute = random.int(0, 59)
+        minute = random.randint(0, 59)
     second = random.randint (0, 59)
     return datetime.now().replace(hour=hour, minute=minute, second=second)
 
@@ -16,7 +16,7 @@ random_time_obj = 0
 daily_orders = 0
 counter = 0
 
-conn = sqlite3.connect('schemagen.sql')
+conn = sqlite3.connect('schemagen.db')
 cursor = conn.cursor()
 
 while True:
@@ -41,7 +41,7 @@ while date <= end_date:
     while counter <= daily_orders:
         random_time_obj = random_time()
         date = date.replace(hour=random_time_obj.hour, minute=random_time_obj.minute, second=random_time_obj.second)
-        if date == cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = (SELECT MAX(OrderID) - 1 FROM Orders"""):
+        if cursor.execute("""SELECT MAX(OrderID) FROM Orders""") > 0 and date == cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = (SELECT MAX(OrderID) - 1 FROM Orders)"""):
             date += timedelta(seconds=30)
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", date)
         counter += 1
