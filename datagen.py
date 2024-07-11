@@ -39,7 +39,7 @@ while True:
 
 date = start_date
 while date <= end_date:
-    for _ in range(random.randint(5, 80)):
+    for _ in range(1, random.randint(4, 79)):
         hour, minute, second = random_time()
         prev_date = date
         date = datetime.combine(date, datetime.min.time()).replace(hour=hour, minute=minute, second=second)
@@ -47,5 +47,5 @@ while date <= end_date:
             date += timedelta(seconds=30)
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
     date += timedelta(days=1)
-cursor.execute("""SELECT * FROM Orders ORDER BY OrderTime""")
+cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
 conn.commit()
