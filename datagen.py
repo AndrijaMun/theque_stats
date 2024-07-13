@@ -14,11 +14,8 @@ conn.commit()
 
 # function that generates a random time
 def random_time():
-    hour = random.randint(12, 22)
-    if hour == 22:
-        minute = random.randint(0, 30)
-    else:
-        minute = random.randint(0, 59)
+    hour = random.randint(12, 21)
+    minute = random.randint(0, 59)
     second = random.randint (0, 59)
     return hour, minute, second
 
@@ -70,6 +67,8 @@ for row in order_id:
         cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), row))
     else:
         cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 2), row))
+
+
 
 conn.commit()
 
