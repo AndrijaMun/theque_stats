@@ -46,5 +46,5 @@ cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
 sorted_data = cursor.fetchall()
 cursor.execute("""DELETE FROM Orders""")
 for row in sorted_data:
-    cursor.execute("""INSERT INTO Orders (id, OrderTime) VALUES (?, ?)""", row)
+    cursor.execute("""INSERT INTO Orders (OrderID, OrderTime) VALUES (?, ?)""", row)
 conn.commit()
