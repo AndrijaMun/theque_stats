@@ -44,7 +44,7 @@ while date <= end_date:
     for _ in range(1, random.randint(4, 79)):
         hour, minute, second = random_time()
         date = datetime.combine(date, datetime.min.time()).replace(hour=hour, minute=minute, second=second)
-        cursor.execute("""INSERT INTO Orders (OrderTime, OrderTypeID, StampCouponAmount) VALUES (?, ?, ?)""", (date, random.randint(1, 4), random.randint(1, 2)))
+        cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
     date = date.replace(hour=0, minute=0, second=0)
     date += timedelta(days=1)
 cursor.execute("""SELECT DISTINCT OrderTime FROM Orders ORDER BY OrderTime""")
@@ -52,7 +52,26 @@ sorted_data = [row[0] for row in cursor.fetchall()]
 cursor.execute("""DELETE FROM Orders""")
 for row in sorted_data:
     cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (row,))
+
+# creates array with order IDs
+cursor.execute("""SELECT OrderID FROM Orders""")
+order_id = [row[0] for row in cursor.fetchall()]
+
+# inserts order types
+for row in order_id:
+    cursor.execute("""UPDATE Orders SET OrderTypeID = ? WHERE OrderID = ?""", (random.randint(1, 4), row))
+
+# inserts payment types
+for row in order_id:
+    cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (row,))
+# checking which payment types are possible for order type
+    if cursor.fetchone()[0] in [1, 2]:
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1,3), row))
+    else:
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1,2), row))
+
 conn.commit()
+
 
 
 

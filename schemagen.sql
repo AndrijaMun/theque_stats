@@ -95,7 +95,7 @@ CREATE TABLE ItemAddOns (
 
 -- base data entry
 INSERT INTO Cashiers VALUES (1, 'John', 'Doe'), (2, 'Mary', 'Sue');
-INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt delivery'), (4, 'Wolt pickup');
+INSERT INTO OrderTypes VALUES (1, 'In person'), (2, 'Call in pickup'), (3, 'Wolt pickup'), (4, 'Wolt delivery');
 INSERT INTO PaymentTypes VALUES (1, 'Cash'), (2, 'Card'), (3, 'Coupon');
 INSERT INTO ItemTypes VALUES (1, 'Tayiaki'), (2, 'Mochi'), (3, 'Ice Cream Cup'), (4, 'Pancake'), (5, 'Beverage'), (6, 'Soft drink');
 INSERT INTO ItemFlavours (ItemFlavour) VALUES ('Vanilla'), ('Chocolate'), ('Matcha'), ('Mango'), ('Oreo'), ('Plasma'), ('Bueno'), ('Raffaello'), ('Plain'), ('Peach'), ('Apple'), ('Orange');
