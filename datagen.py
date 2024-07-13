@@ -12,9 +12,7 @@ def random_time():
     second = random.randint (0, 59)
     return hour, minute, second
 
-
-
-conn = sqlite3.connect('theque.db', detect_types=sqlite3.PARSE_DECLTYPES)
+conn = sqlite3.connect('theque.db')
 cursor = conn.cursor()
 
 while True:
@@ -43,8 +41,8 @@ while date <= end_date:
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
     date += timedelta(days=1)
 cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
-sorted_data = cursor.fetchall()
+sorted_data = [row[0] for row in cursor.fetchall()]
 cursor.execute("""DELETE FROM Orders""")
 for row in sorted_data:
-    cursor.execute("""INSERT INTO Orders (OrderID, OrderTime) VALUES (?, ?)""", row)
+    cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (row,))
 conn.commit()
