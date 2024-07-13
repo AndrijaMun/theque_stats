@@ -43,4 +43,8 @@ while date <= end_date:
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
     date += timedelta(days=1)
 cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
+sorted_data = cursor.fetchall()
+cursor.execute("""DELETE FROM Orders""")
+for row in sorted_data:
+    cursor.execute("""INSERT INTO Orders (id, OrderTime) VALUES (?, ?)""", row)
 conn.commit()
