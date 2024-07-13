@@ -12,12 +12,7 @@ def random_time():
     second = random.randint (0, 59)
     return hour, minute, second
 
-def adapt_datetime(dt):
-    return dt.isoformat()
-def convert_datetime(s):
-    return datetime.fromisoformat(s)
-sqlite3.register_adapter(datetime, adapt_datetime)
-sqlite3.register_converter("datetime", convert_datetime)
+
 
 conn = sqlite3.connect('theque.db', detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
