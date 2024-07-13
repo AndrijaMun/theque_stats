@@ -3,7 +3,16 @@ import pandas as pd
 import random
 from datetime import datetime, timedelta
 
-# generates a random time
+# creating and connecting to the database
+conn = sqlite3.connect('theque.db')
+cursor = conn.cursor()
+
+# executing SQL within the database
+with open('schemagen.sql', 'r') as sql_file:
+    cursor.executescript(sql_file.read())
+conn.commit()
+
+# function that generates a random time
 def random_time():
     hour = random.randint(12, 22)
     if hour == 22:
@@ -12,10 +21,6 @@ def random_time():
         minute = random.randint(0, 59)
     second = random.randint (0, 59)
     return hour, minute, second
-
-# connecting to the database
-conn = sqlite3.connect('theque.db')
-cursor = conn.cursor()
 
 # asks for the range of dates the user wants to generate data for
 while True:
