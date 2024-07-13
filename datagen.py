@@ -34,13 +34,10 @@ date = start_date
 while date <= end_date:
     for _ in range(1, random.randint(4, 79)):
         hour, minute, second = random_time()
-        prev_date = date
         date = datetime.combine(date, datetime.min.time()).replace(hour=hour, minute=minute, second=second)
-        if date == prev_date:
-            date += timedelta(seconds=30)
         cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (date,))
     date += timedelta(days=1)
-cursor.execute("""SELECT OrderTime FROM Orders ORDER BY OrderTime""")
+cursor.execute("""SELECT DISTINCT OrderTime FROM Orders ORDER BY OrderTime""")
 sorted_data = [row[0] for row in cursor.fetchall()]
 cursor.execute("""DELETE FROM Orders""")
 for row in sorted_data:
