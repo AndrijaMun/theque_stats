@@ -61,14 +61,15 @@ order_id = [row[0] for row in cursor.fetchall()]
 for row in order_id:
     cursor.execute("""UPDATE Orders SET OrderTypeID = ? WHERE OrderID = ?""", (random.randint(1, 4), row))
 
-# inserts payment types
+# inserts payment types and if a filled out stamp card is presented
 for row in order_id:
     cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (row,))
 # checking which payment types are possible for order type
-    if cursor.fetchone()[0] in [1, 2]:
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1,3), row))
+    if cursor.fetchone()[0] in [1, 3]:
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 3), row))
+        cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), row))
     else:
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1,2), row))
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 2), row))
 
 conn.commit()
 
