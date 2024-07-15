@@ -126,7 +126,9 @@ cursor.execute("""SELECT MAX(ItemID) From Items""")
 total_items = cursor.fetchone()[0]
 for row in order_id:
     for _ in range (1, random.randint(2, 6)):
-        cursor.execute("""INSERT INTO OrderInfo VALUES (ItemID, ItemAmount, OrderID)""", (random.randint(1, total_items), random.randint(1, 3) , row))
+        item = random.randint(1, total_items)
+        item_amount = random.randint(1, 3)
+        cursor.execute("""INSERT INTO OrderInfo VALUES (ItemID, ItemAmount, PriceTotal, OrderID)""", (item, item_amount, item * item_amount, row))
 
 conn.commit()
 
