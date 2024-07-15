@@ -136,7 +136,7 @@ for row in order_id:
         cursor.execute("""INSERT INTO OrderInfo (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, row))
 
 conn.commit()
-
+conn.close()
 
 
 
