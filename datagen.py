@@ -152,11 +152,16 @@ for row in orderitems_id:
 
 # inserts total order amount
 for row in order_id:
-    cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (row,))
-    item_total = cursor.fetchone()[0] or 0 
-    cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
-    addon_total = cursor.fetchone()[0] or 0 
-    cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (item_total + addon_total, row))
+    cursor.execute("""SELECT PaymentTypeID FROM Orders WHERE OrderID = ?""", (row,))
+    free_check = cursor.fetchone()[0]
+    if free_check == 3:
+        cursor.execute("""UPDATE Orders SET OrderAmount = 0 WHERE OrderID = ?""", (row,))
+    else:
+        cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (row,))
+        item_total = cursor.fetchone()[0] or 0 
+        cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
+        addon_total = cursor.fetchone()[0] or 0 
+        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (item_total + addon_total, row))
     
 conn.commit()
 conn.close()
