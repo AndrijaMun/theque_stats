@@ -152,11 +152,13 @@ for row in orderitems_id:
 
 # inserts total order amount
 for row in order_id:
+# checks if payment type is via coupon
     cursor.execute("""SELECT PaymentTypeID FROM Orders WHERE OrderID = ?""", (row,))
     free_check = cursor.fetchone()[0]
     if free_check == 3:
         cursor.execute("""UPDATE Orders SET OrderAmount = 0 WHERE OrderID = ?""", (row,))
     else:
+# adds up total item prices and total add-on prices
         cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (row,))
         item_total = cursor.fetchone()[0] or 0 
         cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
@@ -165,6 +167,7 @@ for row in order_id:
         cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, row))
         cursor.execute("""SELECT StampCouponAmount FROM Orders WHERE OrderID = ?""", (row,))
         stamp_check = cursor.fetchone()[0]
+# reduces price if stamp card is presented
         if stamp_check == 1:
             cursor.execute("""SELECT MAX(ItemPrice), ItemID FROM Items WHERE ItemID IN (SELECT ItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
             free_item_price, free_item_id = cursor.fetchone()
