@@ -98,7 +98,7 @@ for row in order_id:
         cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
 # checking if stampcard usage is possible for payment type
         if payment_type != 3:
-            cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", random.choice([None, 1]), row)
+            cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), row))
     else:
         payment_type = random.randint(1, 2)
         cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
@@ -128,7 +128,9 @@ for row in order_id:
     for _ in range (1, random.randint(2, 6)):
         item = random.randint(1, total_items)
         item_amount = random.randint(1, 3)
-        cursor.execute("""INSERT INTO OrderInfo VALUES (ItemID, ItemAmount, PriceTotal, OrderID)""", (item, item_amount, item * item_amount, row))
+        cursor.execute("""SELECT ItemPrice FROM Items WHERE ItemID = ?""", (item,))
+        item_price = cursor.fetchone()[0]
+        cursor.execute("""INSERT INTO OrderInfo (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, row))
 
 conn.commit()
 
