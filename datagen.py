@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import pandas as pd
 import random
 from datetime import datetime, timedelta
 
@@ -142,13 +141,22 @@ cursor.execute("""SELECT OrderItemID FROM OrderItems""")
 orderitems_id = [row[0] for row in cursor.fetchall()]
 for row in orderitems_id:
     addon_list = list(range(1, total_addons + 1))
-    for _ in range (1, random.randint(2, 3)):
-        addon = random.choice(addon_list)
-        addon_list.remove(addon)
-        addon_amount = random.randint(1, 2)
-        cursor.execute("""SELECT AddOnPrice FROM AddOns WHERE AddOnID = ?""", (addon,))
-        addon_price = cursor.fetchone()[0]
-        cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, row))
+    cursor.execute("""SELECT ItemTypeID FROM Items WHERE ItemID = (SELECT ItemID FROM OrderItems WHERE OrderItemID = ?)""", (row,))
+    itemtype_id = cursor.fetchone()[0]
+# checks if item can have add-ons
+    if itemtype_id != 6:
+        if itemtype_id != 1:
+            addon_list.remove(23)
+        for _ in range (1, random.randint(2, 3)):
+            addon = random.choice(addon_list)
+            addon_list.remove(addon)
+            if addon == 23:
+                addon_amount = 1
+            else:
+                addon_amount = random.randint(1, 2)
+            cursor.execute("""SELECT AddOnPrice FROM AddOns WHERE AddOnID = ?""", (addon,))
+            addon_price = cursor.fetchone()[0]
+            cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, row))
 
 # inserts total order amount
 for row in order_id:
