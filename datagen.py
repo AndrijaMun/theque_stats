@@ -94,10 +94,14 @@ for row in order_id:
     cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (row,))
 # checking which payment types are possible for order type
     if cursor.fetchone()[0] in [1, 3]:
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 3), row))
-        cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), row))
+        payment_type = random.randint(1, 3)
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
+# checking if stampcard usage is possible for payment type
+        if payment_type != 3:
+            cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", random.choice([None, 1]), row)
     else:
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 2), row))
+        payment_type = random.randint(1, 2)
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
 
 # inserts which cashiers served the order
 prevdate = datetime.min
@@ -117,6 +121,12 @@ for row in order_id:
         cashier = evening_shift
     cursor.execute("""UPDATE Orders SET CashierID = ? WHERE OrderID = ?""", (cashier, row))
     prevdate = date
+
+cursor.execute("""SELECT MAX(ItemID) From Items""")
+total_items = cursor.fetchone()[0]
+for row in order_id:
+    for _ in range (1, random.randint(2, 6)):
+        cursor.execute("""UPDATE OrderInfo SET ItemID = ? WHERE OrderID = ?""", random.randint(1, total_items), row)
 
 conn.commit()
 
