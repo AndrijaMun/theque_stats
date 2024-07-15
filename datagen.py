@@ -122,11 +122,14 @@ for row in order_id:
     cursor.execute("""UPDATE Orders SET CashierID = ? WHERE OrderID = ?""", (cashier, row))
     prevdate = date
 
+# inserts items for each order
 cursor.execute("""SELECT MAX(ItemID) From Items""")
 total_items = cursor.fetchone()[0]
 for row in order_id:
+    item_list = list(range(1, total_items + 1))
     for _ in range (1, random.randint(2, 6)):
-        item = random.randint(1, total_items)
+        item = random.choice(item_list)
+        item_list.remove(item)
         item_amount = random.randint(1, 3)
         cursor.execute("""SELECT ItemPrice FROM Items WHERE ItemID = ?""", (item,))
         item_price = cursor.fetchone()[0]
