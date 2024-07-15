@@ -161,8 +161,17 @@ for row in order_id:
         item_total = cursor.fetchone()[0] or 0 
         cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
         addon_total = cursor.fetchone()[0] or 0 
-        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (item_total + addon_total, row))
-    
+        order_total = item_total + addon_total
+        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, row))
+        cursor.execute("""SELECT StampCouponAmount FROM Orders WHERE OrderID = ?""", (row,))
+        stamp_check = cursor.fetchone()[0]
+        if stamp_check == 1:
+            cursor.execute("""SELECT MAX(ItemPrice), ItemID FROM Items WHERE ItemID IN (SELECT ItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
+            free_item_price, free_item_id = cursor.fetchone()
+            cursor.execute("""SELECT MAX(AddOnPrice) FROM AddOns WHERE AddOnID IN (SELECT AddOnID FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ? AND ItemID = ?))""", (row, free_item_id))
+            free_addon_price = cursor.fetchone()[0] or 0
+            cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total - free_item_price - free_addon_price, row))
+
 conn.commit()
 conn.close()
 
