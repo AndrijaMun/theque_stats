@@ -1,9 +1,12 @@
+import os
 import sqlite3
 import pandas as pd
 import random
 from datetime import datetime, timedelta
 
 # creating and connecting to the database
+if os.path.exists('theque.db'):
+    os.remove('theque.db')
 conn = sqlite3.connect('theque.db')
 cursor = conn.cursor()
 
@@ -19,6 +22,34 @@ def random_time():
     second = random.randint (0, 59)
     return hour, minute, second
 
+#function that sets shifts for cashiers
+shift_offset = [1, 3]
+offset1 = random.choice(shift_offset)
+shift_offset.remove(offset1)
+offset2 = shift_offset[0]
+counter1 = offset1
+counter2 = offset2
+def set_shifts():
+    global counter1, counter2, morning_shift, evening_shift, offset1, offset2
+    options = [1, 2]
+    morning_shift = random.choice(options)
+    options.remove(morning_shift)
+    evening_shift = options[0]
+    if counter1 > 7:
+        counter1 = 1
+    elif counter1 > 5:
+        if morning_shift == 1:
+            morning_shift = 3
+        else:
+            evening_shift = 3
+    if counter2 > 7:
+        counter2 = 1
+    elif counter2 > 5:
+        if morning_shift == 2:
+            morning_shift = 3
+        else:
+            evening_shift = 3
+    
 # asks for the range of dates the user wants to generate data for
 while True:
     try:
@@ -68,7 +99,24 @@ for row in order_id:
     else:
         cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (random.randint(1, 2), row))
 
-
+# inserts which cashiers served the order
+prevdate = datetime.min
+set_shifts()
+for row in order_id:
+    cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = ?""", (row,))
+    date = datetime.strptime(cursor.fetchone()[0], '%Y-%m-%d %H:%M:%S')
+# checks if order is in the same day as the previous order
+    if date.day != prevdate.day and prevdate.day != datetime.min:
+        counter1 +=1
+        counter2 +=1
+        set_shifts()
+# checks in which shift the order is placed
+    if date.hour < 19:
+        cashier = morning_shift
+    else:
+        cashier = evening_shift
+    cursor.execute("""UPDATE Orders SET CashierID = ? WHERE OrderID = ?""", (cashier, row))
+    prevdate = date
 
 conn.commit()
 
