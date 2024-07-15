@@ -150,6 +150,14 @@ for row in orderitems_id:
         addon_price = cursor.fetchone()[0]
         cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, row))
 
+# inserts total order amount
+for row in order_id:
+    cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (row,))
+    item_total = cursor.fetchone()[0] or 0 
+    cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
+    addon_total = cursor.fetchone()[0] or 0 
+    cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (item_total + addon_total, row))
+    
 conn.commit()
 conn.close()
 
