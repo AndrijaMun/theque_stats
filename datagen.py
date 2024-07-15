@@ -133,7 +133,22 @@ for row in order_id:
         item_amount = random.randint(1, 3)
         cursor.execute("""SELECT ItemPrice FROM Items WHERE ItemID = ?""", (item,))
         item_price = cursor.fetchone()[0]
-        cursor.execute("""INSERT INTO OrderInfo (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, row))
+        cursor.execute("""INSERT INTO OrderItems (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, row))
+
+# inserts addons for each item
+cursor.execute("""SELECT MAX(AddOnID) From AddOns""")
+total_addons = cursor.fetchone()[0]
+cursor.execute("""SELECT OrderItemID FROM OrderItems""")
+orderitems_id = [row[0] for row in cursor.fetchall()]
+for row in orderitems_id:
+    addon_list = list(range(1, total_addons + 1))
+    for _ in range (1, random.randint(2, 3)):
+        addon = random.choice(addon_list)
+        addon_list.remove(addon)
+        addon_amount = random.randint(1, 2)
+        cursor.execute("""SELECT AddOnPrice FROM AddOns WHERE AddOnID = ?""", (addon,))
+        addon_price = cursor.fetchone()[0]
+        cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, row))
 
 conn.commit()
 conn.close()

@@ -33,8 +33,8 @@ CREATE TABLE PaymentTypes (
 );
 
 -- table for each item in an order 
-CREATE TABLE OrderInfo (
-    OrderInfoID INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE OrderItems (
+    OrderItemID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderID INTEGER NOT NULL,
     ItemID INTEGER NOT NULL,
     -- same items are grouped together
@@ -85,11 +85,11 @@ CREATE TABLE AddOnTypes (
 -- table for add-ons paired with an item in an order
 CREATE TABLE ItemAddOns (
     ItemAddOnID INTEGER PRIMARY KEY AUTOINCREMENT,
-    OrderInfoID INTEGER NOT NULL,
+    OrderItemID INTEGER NOT NULL,
     AddOnID INTEGER NOT NULL,
     AddOnAmount INTEGER NOT NULL,
     PriceTotal DECIMAL (5,2),
-    FOREIGN KEY (OrderInfoID) REFERENCES OrderInfo(OrderInfoID),
+    FOREIGN KEY (OrderItemID) REFERENCES OrderItems(OrderItemID),
     FOREIGN KEY (AddOnID) REFERENCES AddOns(AddOnID)
 );
 
