@@ -77,6 +77,7 @@ while date <= end_date:
 cursor.execute("""SELECT DISTINCT OrderTime FROM Orders ORDER BY OrderTime""")
 sorted_data = [row[0] for row in cursor.fetchall()]
 cursor.execute("""DELETE FROM Orders""")
+cursor.execute("""DELETE FROM sqlite_sequence WHERE name='Orders'""")
 for row in sorted_data:
     cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (row,))
 
