@@ -187,6 +187,7 @@ for row in order_id:
 conn.commit()
 conn.close()
 
+os.exit(0)
 
 
                
