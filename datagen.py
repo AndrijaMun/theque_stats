@@ -75,39 +75,39 @@ while date <= end_date:
     date = date.replace(hour=0, minute=0, second=0)
     date += timedelta(days=1)
 cursor.execute("""SELECT DISTINCT OrderTime FROM Orders ORDER BY OrderTime""")
-sorted_data = [row[0] for row in cursor.fetchall()]
+sorted_dt = [dt[0] for dt in cursor.fetchall()]
 cursor.execute("""DELETE FROM Orders""")
 cursor.execute("""DELETE FROM sqlite_sequence WHERE name='Orders'""")
-for row in sorted_data:
-    cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (row,))
+for dt in sorted_dt:
+    cursor.execute("""INSERT INTO Orders (OrderTime) VALUES (?)""", (dt,))
 
 # creates array with order IDs
 cursor.execute("""SELECT OrderID FROM Orders""")
-order_id = [row[0] for row in cursor.fetchall()]
+order_id = [id[0] for id in cursor.fetchall()]
 
 # inserts order types
-for row in order_id:
-    cursor.execute("""UPDATE Orders SET OrderTypeID = ? WHERE OrderID = ?""", (random.randint(1, 4), row))
+for id in order_id:
+    cursor.execute("""UPDATE Orders SET OrderTypeID = ? WHERE OrderID = ?""", (random.randint(1, 4), id))
 
 # inserts payment types and if a filled out stamp card is presented
-for row in order_id:
-    cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (row,))
+for id in order_id:
+    cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (id,))
 # checking which payment types are possible for order type
     if cursor.fetchone()[0] in [1, 3]:
         payment_type = random.randint(1, 3)
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, id))
 # checking if stampcard usage is possible for payment type
         if payment_type != 3:
-            cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), row))
+            cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), id))
     else:
         payment_type = random.randint(1, 2)
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, row))
+        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, id))
 
 # inserts which cashiers served the order
 prevdate = datetime.min
 set_shifts()
-for row in order_id:
-    cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = ?""", (row,))
+for id in order_id:
+    cursor.execute("""SELECT OrderTime FROM Orders WHERE OrderID = ?""", (id,))
     date = datetime.strptime(cursor.fetchone()[0], '%Y-%m-%d %H:%M:%S')
 # checks if order is in the same day as the previous order
     if date.day != prevdate.day and prevdate.day != datetime.min:
@@ -119,30 +119,36 @@ for row in order_id:
         cashier = morning_shift
     else:
         cashier = evening_shift
-    cursor.execute("""UPDATE Orders SET CashierID = ? WHERE OrderID = ?""", (cashier, row))
+    cursor.execute("""UPDATE Orders SET CashierID = ? WHERE OrderID = ?""", (cashier, id))
     prevdate = date
 
 # inserts items for each order
 cursor.execute("""SELECT MAX(ItemID) From Items""")
 total_items = cursor.fetchone()[0]
-for row in order_id:
+for id in order_id:
     item_list = list(range(1, total_items + 1))
+    cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID == ?""", (id,))
+    ordertype_id = cursor.fetchone()[0]
+    if ordertype_id == 4:
+        cursor.execute("""SELECT ItemID FROM Items WHERE ItemTypeID IN (1, 2, 3)""")
+        item_icecream = [item[0] for item in cursor.fetchall()]
+        item_list = [item for item in item_list if item not in item_icecream]
     for _ in range (1, random.randint(2, 6)):
         item = random.choice(item_list)
         item_list.remove(item)
         item_amount = random.randint(1, 3)
         cursor.execute("""SELECT ItemPrice FROM Items WHERE ItemID = ?""", (item,))
         item_price = cursor.fetchone()[0]
-        cursor.execute("""INSERT INTO OrderItems (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, row))
+        cursor.execute("""INSERT INTO OrderItems (ItemID, ItemAmount, PriceTotal, OrderID) VALUES (?, ?, ?, ?)""", (item, item_amount, item_amount * item_price, id))
 
 # inserts addons for each item
 cursor.execute("""SELECT MAX(AddOnID) From AddOns""")
 total_addons = cursor.fetchone()[0]
 cursor.execute("""SELECT OrderItemID FROM OrderItems""")
-orderitems_id = [row[0] for row in cursor.fetchall()]
-for row in orderitems_id:
+orderitems_id = [id[0] for id in cursor.fetchall()]
+for id in orderitems_id:
     addon_list = list(range(1, total_addons + 1))
-    cursor.execute("""SELECT ItemTypeID FROM Items WHERE ItemID = (SELECT ItemID FROM OrderItems WHERE OrderItemID = ?)""", (row,))
+    cursor.execute("""SELECT ItemTypeID FROM Items WHERE ItemID = (SELECT ItemID FROM OrderItems WHERE OrderItemID = ?)""", (id,))
     itemtype_id = cursor.fetchone()[0]
 # checks if item can have add-ons
     if itemtype_id != 6:
@@ -157,32 +163,32 @@ for row in orderitems_id:
                 addon_amount = random.randint(1, 2)
             cursor.execute("""SELECT AddOnPrice FROM AddOns WHERE AddOnID = ?""", (addon,))
             addon_price = cursor.fetchone()[0]
-            cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, row))
+            cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, id))
 
 # inserts total order amount
-for row in order_id:
+for id in order_id:
 # checks if payment type is via coupon
-    cursor.execute("""SELECT PaymentTypeID FROM Orders WHERE OrderID = ?""", (row,))
+    cursor.execute("""SELECT PaymentTypeID FROM Orders WHERE OrderID = ?""", (id,))
     free_check = cursor.fetchone()[0]
     if free_check == 3:
-        cursor.execute("""UPDATE Orders SET OrderAmount = 0 WHERE OrderID = ?""", (row,))
+        cursor.execute("""UPDATE Orders SET OrderAmount = 0 WHERE OrderID = ?""", (id,))
     else:
 # adds up total item prices and total add-on prices
-        cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (row,))
+        cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (id,))
         item_total = cursor.fetchone()[0] or 0 
-        cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
+        cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (id,))
         addon_total = cursor.fetchone()[0] or 0 
         order_total = item_total + addon_total
-        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, row))
-        cursor.execute("""SELECT StampCouponAmount FROM Orders WHERE OrderID = ?""", (row,))
+        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, id))
+        cursor.execute("""SELECT StampCouponAmount FROM Orders WHERE OrderID = ?""", (id,))
         stamp_check = cursor.fetchone()[0]
 # reduces price if stamp card is presented
         if stamp_check == 1:
-            cursor.execute("""SELECT MAX(ItemPrice), ItemID FROM Items WHERE ItemID IN (SELECT ItemID FROM OrderItems WHERE OrderID = ?)""", (row,))
+            cursor.execute("""SELECT MAX(ItemPrice), ItemID FROM Items WHERE ItemID IN (SELECT ItemID FROM OrderItems WHERE OrderID = ?)""", (id,))
             free_item_price, free_item_id = cursor.fetchone()
-            cursor.execute("""SELECT MAX(AddOnPrice) FROM AddOns WHERE AddOnID IN (SELECT AddOnID FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ? AND ItemID = ?))""", (row, free_item_id))
+            cursor.execute("""SELECT MAX(AddOnPrice) FROM AddOns WHERE AddOnID IN (SELECT AddOnID FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ? AND ItemID = ?))""", (id, free_item_id))
             free_addon_price = cursor.fetchone()[0] or 0
-            cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total - free_item_price - free_addon_price, row))
+            cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total - free_item_price - free_addon_price, id))
 
 conn.commit()
 conn.close()
