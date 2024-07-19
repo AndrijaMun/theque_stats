@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import pandas as pd
 import numpy as np
@@ -6,6 +7,11 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Alignment
 import matplotlib.pyplot as plt
+
+# Create a new directory for the generated files
+output_dir = 'analyzed_data_output'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 # Connect to the SQLite database
 conn = sqlite3.connect('theque.db')
@@ -55,6 +61,7 @@ item_addon_combo = item_addon_combo.merge(order_items, on='OrderItemID')
 item_addon_combo = item_addon_combo.merge(items[['ItemID', 'ItemName']], on='ItemID')
 item_addon_combo = item_addon_combo.merge(addons[['AddOnID', 'AddOn']], on='AddOnID')
 item_addon_combo = item_addon_combo.groupby(['ItemName', 'AddOn'])['AddOnAmount'].sum().reset_index().sort_values(by='AddOnAmount', ascending=False)
+item_addon_combo.rename(columns={'AddOnAmount': 'CombinationCount'}, inplace=True)
 
 # Most popular flavors
 popular_flavors = order_items.merge(items[['ItemID', 'ItemFlavour']], on='ItemID')
@@ -67,10 +74,11 @@ busiest_hours = orders.groupby('OrderHour')['OrderID'].count().reset_index().ren
 # Busiest days of the week on average
 orders['OrderDate'] = pd.to_datetime(orders['OrderTime']).dt.date
 orders['OrderDay'] = pd.to_datetime(orders['OrderDate']).dt.dayofweek
-busiest_days = orders.groupby('OrderDay')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
+orders['DayOfWeek'] = pd.to_datetime(orders['OrderDate']).dt.strftime('%A')
+busiest_days = orders.groupby('DayOfWeek')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
 
 # Actual busiest day in the given time period
-busiest_actual_day = orders.groupby('OrderDate')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False).iloc[0]
+busiest_actual_day = orders.groupby('OrderDate')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
 
 # Cashier that sold most items
 cashier_sales = order_items.merge(orders, on='OrderID').groupby('CashierID')['ItemAmount'].sum().reset_index().merge(cashiers, on='CashierID').sort_values(by='ItemAmount', ascending=False)
@@ -101,9 +109,12 @@ ws['B1'] = total_sales
 ws['A2'] = 'Total Orders'
 ws['B2'] = total_orders
 
+# Rename the sheet to "Summary"
+ws.title = "Summary"
+
 # Write sales by payment type
-ws.title = "Sales by Payment Type"
-write_df_to_sheet(sales_by_payment_type, ws, start_row=4)
+ws_payment_type = wb.create_sheet("Sales by Payment Type")
+write_df_to_sheet(sales_by_payment_type, ws_payment_type)
 
 # Create a new sheet for sales by order type
 ws_order_type = wb.create_sheet("Sales by Order Type")
@@ -119,7 +130,7 @@ write_df_to_sheet(popular_addons[['AddOn', 'AddOnAmount']], ws_popular_addons)
 
 # Create a new sheet for most popular item and add-on combination
 ws_item_addon_combo = wb.create_sheet("Item-AddOn Combos")
-write_df_to_sheet(item_addon_combo[['ItemName', 'AddOn', 'AddOnAmount']], ws_item_addon_combo)
+write_df_to_sheet(item_addon_combo[['ItemName', 'AddOn', 'CombinationCount']], ws_item_addon_combo)
 
 # Create a new sheet for most popular flavors
 ws_popular_flavors = wb.create_sheet("Popular Flavors")
@@ -129,7 +140,7 @@ write_df_to_sheet(popular_flavors, ws_popular_flavors)
 ws_busiest_times = wb.create_sheet("Busiest Times")
 write_df_to_sheet(busiest_hours, ws_busiest_times, start_row=1)
 write_df_to_sheet(busiest_days, ws_busiest_times, start_row=len(busiest_hours) + 3)
-write_df_to_sheet(pd.DataFrame([busiest_actual_day]), ws_busiest_times, start_row=len(busiest_hours) + len(busiest_days) + 5)
+write_df_to_sheet(busiest_actual_day, ws_busiest_times, start_row=len(busiest_hours) + len(busiest_days) + 5)
 
 # Create a new sheet for cashier sales, traffic, and revenue
 ws_cashier = wb.create_sheet("Cashier Performance")
@@ -144,11 +155,12 @@ plt.title('Sales by Payment Type')
 plt.xlabel('Payment Type')
 plt.ylabel('Sales')
 plt.xticks(rotation=45)
-plt.savefig('sales_by_payment_type.png')
+plt.tight_layout()
+plt.savefig(f'{output_dir}/sales_by_payment_type.png')
 
 # Insert the chart into the sheet
-img = Image('sales_by_payment_type.png')
-ws.add_image(img, 'E1')
+img = Image(f'{output_dir}/sales_by_payment_type.png')
+ws_payment_type.add_image(img, 'E1')
 
 # Generate a chart for sales by order type
 plt.figure(figsize=(10, 6))
@@ -157,10 +169,11 @@ plt.title('Sales by Order Type')
 plt.xlabel('Order Type')
 plt.ylabel('Sales')
 plt.xticks(rotation=45)
-plt.savefig('sales_by_order_type.png')
+plt.tight_layout()
+plt.savefig(f'{output_dir}/sales_by_order_type.png')
 
-# Insert the chart into the order type sheet
-img = Image('sales_by_order_type.png')
+# Insert the chart into the sheet
+img = Image(f'{output_dir}/sales_by_order_type.png')
 ws_order_type.add_image(img, 'E1')
 
 # Generate a chart for popular items
@@ -170,10 +183,10 @@ plt.title('Most Popular Items')
 plt.xlabel('Sales')
 plt.ylabel('Item')
 plt.tight_layout()
-plt.savefig('popular_items.png')
+plt.savefig(f'{output_dir}/popular_items.png')
 
 # Insert the chart into the popular items sheet
-img = Image('popular_items.png')
+img = Image(f'{output_dir}/popular_items.png')
 ws_popular_items.add_image(img, 'E1')
 
 # Generate a chart for popular addons
@@ -183,10 +196,10 @@ plt.title('Most Popular AddOns')
 plt.xlabel('Sales')
 plt.ylabel('AddOn')
 plt.tight_layout()
-plt.savefig('popular_addons.png')
+plt.savefig(f'{output_dir}/popular_addons.png')
 
 # Insert the chart into the popular addons sheet
-img = Image('popular_addons.png')
+img = Image(f'{output_dir}/popular_addons.png')
 ws_popular_addons.add_image(img, 'E1')
 
 # Generate a chart for popular flavors
@@ -196,10 +209,10 @@ plt.title('Most Popular Flavors')
 plt.xlabel('Count')
 plt.ylabel('Flavor')
 plt.tight_layout()
-plt.savefig('popular_flavors.png')
+plt.savefig(f'{output_dir}/popular_flavors.png')
 
 # Insert the chart into the popular flavors sheet
-img = Image('popular_flavors.png')
+img = Image(f'{output_dir}/popular_flavors.png')
 ws_popular_flavors.add_image(img, 'E1')
 
 # Generate a chart for busiest hours
@@ -210,25 +223,39 @@ plt.xlabel('Hour')
 plt.ylabel('Order Count')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('busiest_hours.png')
+plt.savefig(f'{output_dir}/busiest_hours.png')
 
 # Insert the chart into the busiest times sheet
-img = Image('busiest_hours.png')
+img = Image(f'{output_dir}/busiest_hours.png')
 ws_busiest_times.add_image(img, 'E1')
 
 # Generate a chart for busiest days
 plt.figure(figsize=(10, 6))
-plt.plot(busiest_days['OrderDay'], busiest_days['OrderCount'])
+plt.plot(busiest_days['DayOfWeek'], busiest_days['OrderCount'])
 plt.title('Busiest Days')
 plt.xlabel('Day of the Week')
 plt.ylabel('Order Count')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('busiest_days.png')
+plt.savefig(f'{output_dir}/busiest_days.png')
 
 # Insert the chart into the busiest times sheet
-img = Image('busiest_days.png')
+img = Image(f'{output_dir}/busiest_days.png')
 ws_busiest_times.add_image(img, f'E{len(busiest_hours) + 4}')
+
+# Generate a chart for busiest actual day
+plt.figure(figsize=(10, 6))
+plt.plot(busiest_actual_day['OrderDate'], busiest_actual_day['OrderCount'])
+plt.title('Busiest Date')
+plt.xlabel('Date')
+plt.ylabel('Order Count')
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(f'{output_dir}/busiest_actual_day.png')
+
+# Insert the chart into the busiest times sheet
+img = Image(f'{output_dir}/busiest_actual_day.png')
+ws_busiest_times.add_image(img, f'E{len(busiest_hours) + len(busiest_days) + 7}')
 
 # Generate a chart for cashier sales
 plt.figure(figsize=(10, 6))
@@ -237,10 +264,10 @@ plt.title('Cashier Sales')
 plt.xlabel('Items Sold')
 plt.ylabel('Cashier')
 plt.tight_layout()
-plt.savefig('cashier_sales.png')
+plt.savefig(f'{output_dir}/cashier_sales.png')
 
 # Insert the chart into the cashier sheet
-img = Image('cashier_sales.png')
+img = Image(f'{output_dir}/cashier_sales.png')
 ws_cashier.add_image(img, 'E1')
 
 # Generate a chart for cashier traffic
@@ -250,10 +277,10 @@ plt.title('Cashier Traffic')
 plt.xlabel('Order Count')
 plt.ylabel('Cashier')
 plt.tight_layout()
-plt.savefig('cashier_traffic.png')
+plt.savefig(f'{output_dir}/cashier_traffic.png')
 
 # Insert the chart into the cashier sheet
-img = Image('cashier_traffic.png')
+img = Image(f'{output_dir}/cashier_traffic.png')
 ws_cashier.add_image(img, f'E{len(cashier_sales) + 4}')
 
 # Generate a chart for cashier revenue
@@ -263,11 +290,11 @@ plt.title('Cashier Revenue')
 plt.xlabel('Revenue')
 plt.ylabel('Cashier')
 plt.tight_layout()
-plt.savefig('cashier_revenue.png')
+plt.savefig(f'{output_dir}/cashier_revenue.png')
 
 # Insert the chart into the cashier sheet
-img = Image('cashier_revenue.png')
+img = Image(f'{output_dir}/cashier_revenue.png')
 ws_cashier.add_image(img, f'E{len(cashier_sales) + len(cashier_traffic) + 7}')
 
 # Save the workbook
-wb.save('analyzed_data.xlsx')
+wb.save(f'{output_dir}/analyzed_data.xlsx')
