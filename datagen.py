@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import random
+import subprocess
+
 from datetime import datetime, timedelta
 
 # creating and connecting to the database
@@ -193,7 +195,12 @@ for id in order_id:
 conn.commit()
 conn.close()
 
-os.exit(0)
+script_name = 'dataproc.py'
+script_path = os.path.join(os.path.dirname(__file__), script_name)
 
+try:
+    subprocess.run(['python', script_path], check=True)
+except subprocess.CalledProcessError as e:
+    print(f"Error occurred while running {script_name}: {e}")
 
                
