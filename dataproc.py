@@ -109,6 +109,9 @@ ws['B1'] = total_sales
 ws['A2'] = 'Total Orders'
 ws['B2'] = total_orders
 
+# Set the width of column 'A' to fit the text
+ws.column_dimensions['A'].width = max(len('Total Sales'), len('Total Orders')) + 2  # +2 for padding
+
 # Rename the sheet to "Summary"
 ws.title = "Summary"
 
@@ -148,153 +151,39 @@ write_df_to_sheet(cashier_sales, ws_cashier, start_row=1)
 write_df_to_sheet(cashier_traffic, ws_cashier, start_row=len(cashier_sales) + 3)
 write_df_to_sheet(cashier_revenue, ws_cashier, start_row=len(cashier_sales) + len(cashier_traffic) + 6)
 
-# Generate a chart for sales by payment type
-plt.figure(figsize=(10, 6))
-plt.bar(sales_by_payment_type['PaymentType'], sales_by_payment_type['OrderAmount'])
-plt.title('Sales by Payment Type')
-plt.xlabel('Payment Type')
-plt.ylabel('Sales')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig(f'{output_dir}/sales_by_payment_type.png')
+# Define space between images
+spacing = 20
 
-# Insert the chart into the sheet
-img = Image(f'{output_dir}/sales_by_payment_type.png')
-ws_payment_type.add_image(img, 'E1')
+# Function to generate and insert charts
+def create_and_insert_chart(data, title, xlabel, ylabel, image_path, sheet, cell_position):
+    plt.figure(figsize=(10, 6))
+    plt.bar(data.iloc[:, 0], data.iloc[:, 1])
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(image_path)
+    plt.close()
+    
+    img = Image(image_path)
+    sheet.add_image(img, cell_position)
 
-# Generate a chart for sales by order type
-plt.figure(figsize=(10, 6))
-plt.bar(sales_by_order_type['OrderType'], sales_by_order_type['OrderAmount'])
-plt.title('Sales by Order Type')
-plt.xlabel('Order Type')
-plt.ylabel('Sales')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig(f'{output_dir}/sales_by_order_type.png')
+# Generate and insert each chart
+create_and_insert_chart(sales_by_payment_type, 'Sales by Payment Type', 'Payment Type', 'Sales', f'{output_dir}/sales_by_payment_type.png', ws_payment_type, 'E1')
+create_and_insert_chart(sales_by_order_type, 'Sales by Order Type', 'Order Type', 'Sales', f'{output_dir}/sales_by_order_type.png', ws_order_type, 'E1')
+create_and_insert_chart(popular_items, 'Most Popular Items', 'Sales', 'Item', f'{output_dir}/popular_items.png', ws_popular_items, 'E1')
+create_and_insert_chart(popular_addons, 'Most Popular AddOns', 'Sales', 'AddOn', f'{output_dir}/popular_addons.png', ws_popular_addons, 'E1')
+create_and_insert_chart(popular_flavors, 'Most Popular Flavors', 'Count', 'Flavor', f'{output_dir}/popular_flavors.png', ws_popular_flavors, 'E1')
 
-# Insert the chart into the sheet
-img = Image(f'{output_dir}/sales_by_order_type.png')
-ws_order_type.add_image(img, 'E1')
+# Insert charts into the busiest times sheet with spacing
+create_and_insert_chart(busiest_hours, 'Busiest Hours', 'Hour', 'Order Count', f'{output_dir}/busiest_hours.png', ws_busiest_times, 'E1')
+create_and_insert_chart(busiest_days, 'Busiest Days', 'Day of the Week', 'Order Count', f'{output_dir}/busiest_days.png', ws_busiest_times, f'E{len(busiest_hours) + spacing + 1}')
 
-# Generate a chart for popular items
-plt.figure(figsize=(10, 6))
-plt.barh(popular_items['ItemName'], popular_items['ItemAmount'])
-plt.title('Most Popular Items')
-plt.xlabel('Sales')
-plt.ylabel('Item')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/popular_items.png')
-
-# Insert the chart into the popular items sheet
-img = Image(f'{output_dir}/popular_items.png')
-ws_popular_items.add_image(img, 'E1')
-
-# Generate a chart for popular addons
-plt.figure(figsize=(10, 6))
-plt.barh(popular_addons['AddOn'], popular_addons['AddOnAmount'])
-plt.title('Most Popular AddOns')
-plt.xlabel('Sales')
-plt.ylabel('AddOn')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/popular_addons.png')
-
-# Insert the chart into the popular addons sheet
-img = Image(f'{output_dir}/popular_addons.png')
-ws_popular_addons.add_image(img, 'E1')
-
-# Generate a chart for popular flavors
-plt.figure(figsize=(10, 6))
-plt.barh(popular_flavors['ItemFlavour'], popular_flavors['ItemCount'])
-plt.title('Most Popular Flavors')
-plt.xlabel('Count')
-plt.ylabel('Flavor')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/popular_flavors.png')
-
-# Insert the chart into the popular flavors sheet
-img = Image(f'{output_dir}/popular_flavors.png')
-ws_popular_flavors.add_image(img, 'E1')
-
-# Generate a chart for busiest hours
-plt.figure(figsize=(10, 6))
-plt.plot(busiest_hours['OrderHour'], busiest_hours['OrderCount'])
-plt.title('Busiest Hours')
-plt.xlabel('Hour')
-plt.ylabel('Order Count')
-plt.grid(True)
-plt.tight_layout()
-plt.savefig(f'{output_dir}/busiest_hours.png')
-
-# Insert the chart into the busiest times sheet
-img = Image(f'{output_dir}/busiest_hours.png')
-ws_busiest_times.add_image(img, 'E1')
-
-# Generate a chart for busiest days
-plt.figure(figsize=(10, 6))
-plt.plot(busiest_days['DayOfWeek'], busiest_days['OrderCount'])
-plt.title('Busiest Days')
-plt.xlabel('Day of the Week')
-plt.ylabel('Order Count')
-plt.grid(True)
-plt.tight_layout()
-plt.savefig(f'{output_dir}/busiest_days.png')
-
-# Insert the chart into the busiest times sheet
-img = Image(f'{output_dir}/busiest_days.png')
-ws_busiest_times.add_image(img, f'E{len(busiest_hours) + 4}')
-
-# Generate a chart for busiest actual day
-plt.figure(figsize=(10, 6))
-plt.plot(busiest_actual_day['OrderDate'], busiest_actual_day['OrderCount'])
-plt.title('Busiest Date')
-plt.xlabel('Date')
-plt.ylabel('Order Count')
-plt.grid(True)
-plt.tight_layout()
-plt.savefig(f'{output_dir}/busiest_actual_day.png')
-
-# Insert the chart into the busiest times sheet
-img = Image(f'{output_dir}/busiest_actual_day.png')
-ws_busiest_times.add_image(img, f'E{len(busiest_hours) + len(busiest_days) + 7}')
-
-# Generate a chart for cashier sales
-plt.figure(figsize=(10, 6))
-plt.barh(cashier_sales['CashierName'], cashier_sales['ItemAmount'])
-plt.title('Cashier Sales')
-plt.xlabel('Items Sold')
-plt.ylabel('Cashier')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/cashier_sales.png')
-
-# Insert the chart into the cashier sheet
-img = Image(f'{output_dir}/cashier_sales.png')
-ws_cashier.add_image(img, 'E1')
-
-# Generate a chart for cashier traffic
-plt.figure(figsize=(10, 6))
-plt.barh(cashier_traffic['CashierName'], cashier_traffic['OrderCount'])
-plt.title('Cashier Traffic')
-plt.xlabel('Order Count')
-plt.ylabel('Cashier')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/cashier_traffic.png')
-
-# Insert the chart into the cashier sheet
-img = Image(f'{output_dir}/cashier_traffic.png')
-ws_cashier.add_image(img, f'E{len(cashier_sales) + 4}')
-
-# Generate a chart for cashier revenue
-plt.figure(figsize=(10, 6))
-plt.barh(cashier_revenue['CashierName'], cashier_revenue['OrderAmount'])
-plt.title('Cashier Revenue')
-plt.xlabel('Revenue')
-plt.ylabel('Cashier')
-plt.tight_layout()
-plt.savefig(f'{output_dir}/cashier_revenue.png')
-
-# Insert the chart into the cashier sheet
-img = Image(f'{output_dir}/cashier_revenue.png')
-ws_cashier.add_image(img, f'E{len(cashier_sales) + len(cashier_traffic) + 7}')
+# Insert charts into the cashier sheet with spacing
+create_and_insert_chart(cashier_sales, 'Cashier Sales', 'Items Sold', 'Cashier', f'{output_dir}/cashier_sales.png', ws_cashier, 'E1')
+create_and_insert_chart(cashier_traffic, 'Cashier Traffic', 'Order Count', 'Cashier', f'{output_dir}/cashier_traffic.png', ws_cashier, f'E{len(cashier_sales) * 3 + spacing + 1}')
+create_and_insert_chart(cashier_revenue, 'Cashier Revenue', 'Revenue', 'Cashier', f'{output_dir}/cashier_revenue.png', ws_cashier, f'E{len(cashier_sales) * 3 + len(cashier_traffic) * 9 + spacing + 2}')
 
 # Save the workbook
 wb.save(f'{output_dir}/analyzed_data.xlsx')
