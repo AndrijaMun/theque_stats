@@ -166,29 +166,34 @@ for orderitem_id, itemtype_id in orderitems_data:
             cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, orderitem_id))
 
 # inserts total order amount
-for id in order_id:
-# checks if payment type is via coupon
-    cursor.execute("""SELECT PaymentTypeID FROM Orders WHERE OrderID = ?""", (id,))
-    free_check = cursor.fetchone()[0]
-    if free_check == 3:
-        cursor.execute("""UPDATE Orders SET OrderAmount = 0 WHERE OrderID = ?""", (id,))
-    else:
+cursor.execute("""
+    SELECT Orders.OrderID, 
+           Orders.PaymentTypeID, 
+           Orders.StampCouponAmount,
+           COALESCE(SUM(OrderItems.PriceTotal), 0) AS ItemTotal, 
+           COALESCE(SUM(ItemAddOns.PriceTotal), 0) AS AddOnTotal,
+           MAX(Items.ItemPrice) AS MaxItemPrice,
+           MAX(AddOns.AddOnPrice) AS MaxAddonPrice
+    FROM Orders
+    LEFT JOIN OrderItems ON Orders.OrderID = OrderItems.OrderID
+    LEFT JOIN Items ON OrderItems.ItemID = Items.ItemID
+    LEFT JOIN ItemAddOns ON OrderItems.OrderItemID = ItemAddOns.OrderItemID
+    LEFT JOIN AddOns ON ItemAddOns.AddOnID = AddOns.AddOnID
+    GROUP BY Orders.OrderID
+""")
+order_total = cursor.fetchall()
+for order_id, payment_type, stamp_check, item_total, addon_total, max_item_price, max_addon_price in order_total:
 # adds up total item prices and total add-on prices
-        cursor.execute("""SELECT SUM(PriceTotal) FROM OrderItems WHERE OrderID = ?""", (id,))
-        item_total = cursor.fetchone()[0] or 0 
-        cursor.execute("""SELECT SUM(PriceTotal) FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ?)""", (id,))
-        addon_total = cursor.fetchone()[0] or 0 
-        order_total = item_total + addon_total
-        cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, id))
-        cursor.execute("""SELECT StampCouponAmount FROM Orders WHERE OrderID = ?""", (id,))
-        stamp_check = cursor.fetchone()[0]
+    order_total = item_total + addon_total
+# checks if payment type is via coupon
+    if payment_type == 3:
+        order_total = 0
+    else:
 # reduces price if stamp card is presented
         if stamp_check == 1:
-            cursor.execute("""SELECT MAX(ItemPrice), ItemID FROM Items WHERE ItemID IN (SELECT ItemID FROM OrderItems WHERE OrderID = ?)""", (id,))
-            free_item_price, free_item_id = cursor.fetchone()
-            cursor.execute("""SELECT MAX(AddOnPrice) FROM AddOns WHERE AddOnID IN (SELECT AddOnID FROM ItemAddOns WHERE OrderItemID IN (SELECT OrderItemID FROM OrderItems WHERE OrderID = ? AND ItemID = ?))""", (id, free_item_id))
-            free_addon_price = cursor.fetchone()[0] or 0
-            cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total - free_item_price - free_addon_price, id))
+            order_total -= (max_item_price or 0) + (max_addon_price or 0)
+    cursor.execute("""UPDATE Orders SET OrderAmount = ? WHERE OrderID = ?""", (order_total, order_id))
+
 
 conn.commit()
 conn.close()
