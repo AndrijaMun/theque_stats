@@ -5,7 +5,7 @@ a = Analysis(
     ['datagen.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('dataproc.py', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
