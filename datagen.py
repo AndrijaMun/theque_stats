@@ -23,7 +23,7 @@ def random_time():
     second = random.randint (0, 59)
     return hour, minute, second
 
-#function that sets shifts for cashiers
+# function that sets shifts for cashiers
 shift_offset = [1, 3]
 offset1 = random.choice(shift_offset)
 shift_offset.remove(offset1)
@@ -94,16 +94,15 @@ for id in order_id:
 # inserts payment types and if a filled out stamp card is presented
 for id in order_id:
     cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID = ?""", (id,))
-# checking which payment types are possible for order type
+    # checking which payment types are possible for order type
     if cursor.fetchone()[0] in [1, 3]:
         payment_type = random.randint(1, 3)
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, id))
-# checking if stampcard usage is possible for payment type
+        # checking if stampcard usage is possible for payment type
         if payment_type != 3:
             cursor.execute("""UPDATE Orders SET StampCouponAmount = ? WHERE OrderID = ?""", (random.choice([None, 1]), id))
     else:
         payment_type = random.randint(1, 2)
-        cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, id))
+    cursor.execute("""UPDATE Orders SET PaymentTypeID = ? WHERE OrderID = ?""", (payment_type, id))
 
 # inserts which cashiers served the order
 prevdate = datetime.min
@@ -131,10 +130,12 @@ for id in order_id:
     item_list = list(range(1, total_items + 1))
     cursor.execute("""SELECT OrderTypeID FROM Orders WHERE OrderID == ?""", (id,))
     ordertype_id = cursor.fetchone()[0]
+# checks if item is deliverable
     if ordertype_id == 4:
         cursor.execute("""SELECT ItemID FROM Items WHERE ItemTypeID IN (1, 2, 3)""")
         item_icecream = [item[0] for item in cursor.fetchall()]
         item_list = [item for item in item_list if item not in item_icecream]
+# adds a random amount of items and removes them from the list of possible options
     for _ in range (1, random.randint(2, 6)):
         item = random.choice(item_list)
         item_list.remove(item)
