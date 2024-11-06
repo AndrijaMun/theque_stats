@@ -146,12 +146,10 @@ for id in order_id:
 # inserts addons for each item
 cursor.execute("""SELECT MAX(AddOnID) From AddOns""")
 total_addons = cursor.fetchone()[0]
-cursor.execute("""SELECT OrderItemID FROM OrderItems""")
-orderitems_id = [id[0] for id in cursor.fetchall()]
-for id in orderitems_id:
+cursor.execute("""SELECT OrderItems.OrderItemID, Items.ItemTypeID FROM OrderItems JOIN Items ON OrderItems.ItemID = Items.ItemID""")
+orderitems_data = cursor.fetchall()
+for orderitem_id, itemtype_id in orderitems_data:
     addon_list = list(range(1, total_addons + 1))
-    cursor.execute("""SELECT ItemTypeID FROM Items WHERE ItemID = (SELECT ItemID FROM OrderItems WHERE OrderItemID = ?)""", (id,))
-    itemtype_id = cursor.fetchone()[0]
 # checks if item can have add-ons
     if itemtype_id != 6:
         if itemtype_id != 1:
@@ -165,7 +163,7 @@ for id in orderitems_id:
                 addon_amount = random.randint(1, 2)
             cursor.execute("""SELECT AddOnPrice FROM AddOns WHERE AddOnID = ?""", (addon,))
             addon_price = cursor.fetchone()[0]
-            cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, id))
+            cursor.execute("""INSERT INTO ItemAddOns (AddOnID, AddOnAmount, PriceTotal, OrderItemID) VALUES (?, ?, ?, ?)""", (addon, addon_amount, addon_amount * addon_price, orderitem_id))
 
 # inserts total order amount
 for id in order_id:
