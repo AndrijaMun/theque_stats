@@ -203,6 +203,54 @@ ws_busiest_times = wb.create_sheet("Busiest Times")
 write_df_to_sheet(busiest_hours[['OrderHour', 'OrderCount']], ws_busiest_times, start_row=1, start_col=1)
 write_df_to_sheet(busiest_days[['DayOfWeek', 'OrderCount']], ws_busiest_times, start_row=1, start_col=4)
 write_df_to_sheet(busiest_actual_day[['OrderDate', 'OrderCount']], ws_busiest_times, start_row=1, start_col=7)
+# Define the order of days for categorization
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+# Function to round order times to the nearest half-hour interval
+def round_to_nearest_half_hour(order_time):
+    hour = order_time.hour
+    minute = order_time.minute
+    # Round to nearest half-hour mark
+    if minute < 15:
+        return f"{hour}:00"
+    elif minute < 45:
+        return f"{hour}:30"
+    else:
+        return f"{hour + 1}:00" if hour < 22 else "22:00"
+# Apply the rounding function to create a new column with half-hour intervals
+orders['OrderHalfHour'] = orders['OrderTime'].apply(lambda x: round_to_nearest_half_hour(pd.to_datetime(x)))
+# Set DayOfWeek as a categorical variable with the specified order
+orders['DayOfWeek'] = pd.Categorical(orders['DayOfWeek'], categories=day_order, ordered=True)
+# Group by DayOfWeek and the new OrderHalfHour for average order counts
+avg_orders_per_half_hour = orders.groupby(['DayOfWeek', 'OrderHalfHour']).agg({'OrderID': 'count'}).reset_index()
+avg_orders_per_half_hour = avg_orders_per_half_hour.rename(columns={'OrderID': 'OrderCount'})
+# Pivot table with weekdays as columns and half-hour intervals as rows
+avg_orders_per_half_hour_pivot = avg_orders_per_half_hour.pivot_table(
+    index='OrderHalfHour', columns='DayOfWeek', values='OrderCount', aggfunc='mean', fill_value=0
+)
+# Sort the index to ensure proper order for half-hour intervals (12:00 to 22:00)
+avg_orders_per_half_hour_pivot = avg_orders_per_half_hour_pivot.reindex([
+    f"{hour}:{minute:02d}" for hour in range(12, 23) for minute in (0, 30)
+])
+# Plot the graph with ordered days in the legend
+plt.figure(figsize=(12, 6))
+avg_orders_per_half_hour_pivot.plot(kind='line', marker='o', linewidth=2)
+plt.title('Average Orders Across Hours and Weekdays')
+plt.xlabel('Time of Day')
+plt.ylabel('Average Number of Orders')
+# Set only whole-hour ticks on the x-axis, from 12:00 to 22:00
+whole_hours = [f"{hour}:00" for hour in range(12, 23)]
+plt.xticks(ticks=range(0, len(avg_orders_per_half_hour_pivot), 2), labels=whole_hours, rotation=45, ha="right")
+plt.legend(title='Weekdays', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+# Save the plot as an image
+avg_orders_per_half_hour_image_path = f'{output_dir}/avg_orders_per_half_hour_across_weekdays_working_hours.png'
+plt.savefig(avg_orders_per_half_hour_image_path)
+plt.close()
+# Add the image to the Busiest Times sheet at the designated cell
+img = Image(avg_orders_per_half_hour_image_path)
+ws_busiest_times.add_image(img, 'J1')  
+
+
 
 # Add Cashier Performance (Sales, Traffic, and Revenue) sheet 
 ws_cashier_performance = wb.create_sheet("Cashier Performance")
