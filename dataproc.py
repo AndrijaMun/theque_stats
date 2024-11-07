@@ -50,9 +50,10 @@ sales_by_order_type = sales_by_order_type.merge(order_types, on='OrderTypeID')
 popular_items = order_items.groupby('ItemID')['ItemAmount'].sum().reset_index()
 popular_items = popular_items.merge(items[['ItemID', 'ItemName']], on='ItemID').sort_values(by='ItemAmount', ascending=False)
 
-# Most popular addons
+# Most popular addons (renamed AddOnAmount to AddOnCount)
 popular_addons = item_addons.groupby('AddOnID')['AddOnAmount'].sum().reset_index()
 popular_addons = popular_addons.merge(addons[['AddOnID', 'AddOn']], on='AddOnID').sort_values(by='AddOnAmount', ascending=False)
+popular_addons.rename(columns={'AddOnAmount': 'AddOnCount'}, inplace=True)
 
 # Most popular item and add-on combination
 item_addon_combo = item_addons.groupby(['OrderItemID', 'AddOnID'])['AddOnAmount'].sum().reset_index()
@@ -66,16 +67,20 @@ item_addon_combo.rename(columns={'AddOnAmount': 'CombinationCount'}, inplace=Tru
 popular_flavors = order_items.merge(items[['ItemID', 'ItemFlavour']], on='ItemID')
 popular_flavors = popular_flavors.groupby('ItemFlavour')['ItemID'].count().reset_index().rename(columns={'ItemID': 'ItemCount'}).sort_values(by='ItemCount', ascending=False)
 
-# Busiest hours and days
+# Busiest hours, days, and dates
 orders['OrderHour'] = pd.to_datetime(orders['OrderTime']).dt.hour
 busiest_hours = orders.groupby('OrderHour')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
+
 orders['OrderDate'] = pd.to_datetime(orders['OrderTime']).dt.date
 orders['DayOfWeek'] = pd.to_datetime(orders['OrderDate']).dt.strftime('%A')
 busiest_days = orders.groupby('DayOfWeek')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
+
 busiest_actual_day = orders.groupby('OrderDate')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
 
 # Cashier performance metrics
 cashier_sales = order_items.merge(orders, on='OrderID').groupby('CashierID')['ItemAmount'].sum().reset_index().merge(cashiers, on='CashierID').sort_values(by='ItemAmount', ascending=False)
+cashier_sales.rename(columns={'ItemAmount': 'ItemCount'}, inplace=True)
+
 cashier_traffic = orders.groupby('CashierID')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).merge(cashiers, on='CashierID').sort_values(by='OrderCount', ascending=False)
 cashier_revenue = orders.groupby('CashierID')['OrderAmount'].sum().reset_index().merge(cashiers, on='CashierID').sort_values(by='OrderAmount', ascending=False)
 
@@ -121,33 +126,86 @@ write_df_to_sheet(sales_by_payment_type, ws_payment_type)
 ws_order_type = wb.create_sheet("Sales by Order Type")
 write_df_to_sheet(sales_by_order_type, ws_order_type)
 
-write_df_to_sheet(
+# Use the correct sheet for Popular Items with ItemCount
+ws_popular_items = wb.create_sheet("Popular Items")
+write_df_to_sheet(popular_items[['ItemName', 'ItemAmount']], ws_popular_items, rename_columns={'ItemAmount': 'ItemCount'})
+
+# Create a new sheet for popular addons (renamed AddOnAmount to AddOnCount)
+ws_popular_addons = wb.create_sheet("Popular AddOns")
+write_df_to_sheet(popular_addons[['AddOn', 'AddOnCount']], ws_popular_addons)
+
+# Define and use the create_and_insert_top10_chart function to generate and insert the charts
+def create_and_insert_top10_chart(data, title, xlabel, ylabel, name_column, count_column, image_path, sheet, cell_position):
+    # Sort data to get the top 10
+    top10_data = data.nlargest(10, count_column)
+    plt.figure(figsize=(10, 6))
+    plt.bar(top10_data[name_column], top10_data[count_column])
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xticks(rotation=45, ha="right")  # Rotate x-axis labels for better readability
+    plt.tight_layout()
+    plt.savefig(image_path)
+    plt.close()
+    
+    img = Image(image_path)
+    sheet.add_image(img, cell_position)
+
+# Create and insert top 10 charts for popular items and addons
+create_and_insert_top10_chart(
     popular_items[['ItemName', 'ItemAmount']], 
-    wb.create_sheet("Popular Items"), 
-    rename_columns={'ItemAmount': 'ItemCount'}
+    'Top 10 Most Popular Items', 
+    'Item', 
+    'Count', 
+    name_column='ItemName', 
+    count_column='ItemAmount', 
+    image_path=f'{output_dir}/top10_popular_items.png', 
+    sheet=ws_popular_items, 
+    cell_position='E1'
 )
 
-write_df_to_sheet(
-    popular_addons[['AddOn', 'AddOnAmount']], 
-    wb.create_sheet("Popular AddOns"), 
-    rename_columns={'AddOnAmount': 'AddOnCount'}
+create_and_insert_top10_chart(
+    popular_addons[['AddOn', 'AddOnCount']], 
+    'Top 10 Most Popular AddOns', 
+    'AddOn', 
+    'Count', 
+    name_column='AddOn', 
+    count_column='AddOnCount', 
+    image_path=f'{output_dir}/top10_popular_addons.png', 
+    sheet=ws_popular_addons, 
+    cell_position='E1'
 )
 
-write_df_to_sheet(
-    popular_flavors, 
-    wb.create_sheet("Popular Flavors"), 
-    rename_columns={'ItemCount': 'FlavourCount'}
+# Create and insert top 10 chart for Item-AddOn combos
+ws_item_addon_combo = wb.create_sheet("Item-AddOn Combos")
+write_df_to_sheet(item_addon_combo[['ItemName', 'AddOn', 'CombinationCount']], ws_item_addon_combo)
+
+# Merge the ItemName and AddOn for the combo chart
+item_addon_combo['ItemAddOnCombo'] = item_addon_combo['ItemName'] + ' & ' + item_addon_combo['AddOn']
+
+create_and_insert_top10_chart(
+    item_addon_combo[['ItemAddOnCombo', 'CombinationCount']], 
+    'Top 10 Item-AddOn Combos', 
+    'Item-AddOn Combo', 
+    'Count', 
+    name_column='ItemAddOnCombo', 
+    count_column='CombinationCount', 
+    image_path=f'{output_dir}/top10_item_addon_combos.png', 
+    sheet=ws_item_addon_combo, 
+    cell_position='E1'
 )
 
+# Add Busiest Days (Hours, Days, and Weekdays) sheet 
 ws_busiest_times = wb.create_sheet("Busiest Times")
-write_df_to_sheet(busiest_hours, ws_busiest_times, start_row=1)
-write_df_to_sheet(busiest_days, ws_busiest_times, start_row=len(busiest_hours) + 3)
-write_df_to_sheet(busiest_actual_day, ws_busiest_times, start_row=len(busiest_hours) + len(busiest_days) + 5)
+write_df_to_sheet(busiest_hours[['OrderHour', 'OrderCount']], ws_busiest_times, start_row=1, start_col=1)
+write_df_to_sheet(busiest_days[['DayOfWeek', 'OrderCount']], ws_busiest_times, start_row=1, start_col=4)
+write_df_to_sheet(busiest_actual_day[['OrderDate', 'OrderCount']], ws_busiest_times, start_row=1, start_col=7)
 
-ws_cashier = wb.create_sheet("Cashier Performance")
-write_df_to_sheet(cashier_sales, ws_cashier, start_row=1)
-write_df_to_sheet(cashier_traffic, ws_cashier, start_row=len(cashier_sales) + 3)
-write_df_to_sheet(cashier_revenue, ws_cashier, start_row=len(cashier_sales) + len(cashier_traffic) + 6)
+# Add Cashier Performance (Sales, Traffic, and Revenue) sheet 
+ws_cashier_performance = wb.create_sheet("Cashier Performance")
+write_df_to_sheet(cashier_sales[['CashierName', 'ItemCount']], ws_cashier_performance)
+write_df_to_sheet(cashier_traffic[['CashierName', 'OrderCount']], ws_cashier_performance, start_row=len(cashier_sales) + 3)
+write_df_to_sheet(cashier_revenue[['CashierName', 'OrderAmount']], ws_cashier_performance, start_row=len(cashier_sales) + len(cashier_traffic) + 6)
 
 # Save the workbook
 wb.save(f'{output_dir}/analyzed_data.xlsx')
