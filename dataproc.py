@@ -77,10 +77,11 @@ busiest_days = orders.groupby('DayOfWeek')['OrderID'].count().reset_index().rena
 
 busiest_actual_day = orders.groupby('OrderDate')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).sort_values(by='OrderCount', ascending=False)
 
+# Create FullName column by combining CashierName and CashierSurname
+cashiers['FullName'] = cashiers['CashierName'] + ' ' + cashiers['CashierSurname']
 # Cashier performance metrics
 cashier_sales = order_items.merge(orders, on='OrderID').groupby('CashierID')['ItemAmount'].sum().reset_index().merge(cashiers, on='CashierID').sort_values(by='ItemAmount', ascending=False)
 cashier_sales.rename(columns={'ItemAmount': 'ItemCount'}, inplace=True)
-
 cashier_traffic = orders.groupby('CashierID')['OrderID'].count().reset_index().rename(columns={'OrderID': 'OrderCount'}).merge(cashiers, on='CashierID').sort_values(by='OrderCount', ascending=False)
 cashier_revenue = orders.groupby('CashierID')['OrderAmount'].sum().reset_index().merge(cashiers, on='CashierID').sort_values(by='OrderAmount', ascending=False)
 
@@ -205,9 +206,9 @@ write_df_to_sheet(busiest_actual_day[['OrderDate', 'OrderCount']], ws_busiest_ti
 
 # Add Cashier Performance (Sales, Traffic, and Revenue) sheet 
 ws_cashier_performance = wb.create_sheet("Cashier Performance")
-write_df_to_sheet(cashier_sales[['CashierName', 'ItemCount']], ws_cashier_performance)
-write_df_to_sheet(cashier_traffic[['CashierName', 'OrderCount']], ws_cashier_performance, start_row=len(cashier_sales) + 3)
-write_df_to_sheet(cashier_revenue[['CashierName', 'OrderAmount']], ws_cashier_performance, start_row=len(cashier_sales) + len(cashier_traffic) + 6)
+write_df_to_sheet(cashier_sales[['FullName', 'ItemCount']], ws_cashier_performance)
+write_df_to_sheet(cashier_traffic[['FullName', 'OrderCount']], ws_cashier_performance, start_row=len(cashier_sales) + 3)
+write_df_to_sheet(cashier_revenue[['FullName', 'OrderAmount']], ws_cashier_performance, start_row=len(cashier_sales) + len(cashier_traffic) + 6)
 
 # Save the workbook
 wb.save(f'{output_dir}/analyzed_data.xlsx')
