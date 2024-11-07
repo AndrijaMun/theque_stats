@@ -40,6 +40,7 @@ total_orders = orders['OrderID'].nunique()
 # Sales by payment type
 sales_by_payment_type = orders.groupby('PaymentTypeID')['OrderAmount'].sum().reset_index()
 sales_by_payment_type = sales_by_payment_type.merge(payment_types, on='PaymentTypeID')
+sales_by_payment_type = sales_by_payment_type[sales_by_payment_type['PaymentType'] != 'Coupon']
 
 # Sales by order type
 sales_by_order_type = orders.groupby('OrderTypeID')['OrderAmount'].sum().reset_index()
