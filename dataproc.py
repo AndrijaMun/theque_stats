@@ -92,32 +92,34 @@ ws = wb.active
 def write_df_to_sheet(df, sheet, start_row=1, start_col=1, rename_columns=None, format_columns=None):
     if rename_columns:
         df = df.rename(columns=rename_columns)
-    
     if format_columns is None:
         format_columns = [col for col in df.columns if 'Amount' in col]
-    
     euro_col_indices = [df.columns.get_loc(col) + start_col for col in format_columns if col in df.columns]
-    
+    # Write data rows
     for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=True), start_row):
         for c_idx, value in enumerate(row, start_col):
             cell = sheet.cell(row=r_idx, column=c_idx, value=value)
             cell.alignment = Alignment(wrap_text=True)
-            
             if r_idx > start_row - 1 and c_idx in euro_col_indices:
                 cell.number_format = u'€#,##0.00'
-            
-            column_letter = chr(65 + c_idx - 1)
-            sheet.column_dimensions[column_letter].width = max(sheet.column_dimensions[column_letter].width, len(str(value)) + 2)
+    # Adjust column widths considering both the header and data rows
+    for c_idx, column in enumerate(df.columns, start_col):
+        max_length = 0
+        # Consider both the header and data rows
+        column_values = [str(value) for value in [df.columns[c_idx - start_col]] + df.iloc[:, c_idx - start_col].tolist()]
+        # Find the maximum length of all values in the column (header + data)
+        for value_str in column_values:
+            max_length = max(max_length, len(value_str))
+        # Add a little padding for readability
+        adjusted_width = max_length + 2
+        column_letter = chr(65 + c_idx - 1)
+        sheet.column_dimensions[column_letter].width = adjusted_width
 
-# Write summary data
-ws['A1'] = 'Total Sales'
-ws['B1'] = total_sales
-ws['B1'].number_format = u'€#,##0.00'
-ws['A2'] = 'Total Orders'
-ws['B2'] = total_orders
+wb = Workbook()
+ws = wb.active
 
-# Rename the sheet to "Summary"
 ws.title = "Summary"
+write_df_to_sheet(pd.DataFrame({'Total Sales Amount': [total_sales], 'Total Order Count': [total_orders]}), ws)
 
 # Write data to each sheet with specified renaming and euro formatting
 ws_payment_type = wb.create_sheet("Sales by Payment Type")
